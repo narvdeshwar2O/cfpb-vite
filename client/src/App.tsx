@@ -31,27 +31,31 @@ function DashboardLayout() {
   );
 }
 
+import { AuthProvider } from "./context/AuthContext";
+
 export default function App() {
   return (
     <QueryProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={
-            <div className="min-h-screen flex items-center justify-center bg-white p-4">
-              <LoginForm />
-            </div>
-          } />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={
+              <div className="min-h-screen flex items-center justify-center bg-white p-4">
+                <LoginForm />
+              </div>
+            } />
 
-          <Route element={<DashboardLayout />}>
-            <Route path="/" element={<CentralDashboardPage />} />
-            <Route path="/interstate" element={<InterstatePage />} />
-            <Route path="/ten-print" element={<TenPrintPage />} />
-            <Route path="/chance-print" element={<ChancePrintPage />} />
-            <Route path="/user-wise" element={<UserWisePage />} />
-            <Route path="/workflow-live" element={<WorkflowLivePage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+            <Route element={<DashboardLayout />}>
+              <Route path="/" element={<CentralDashboardPage />} />
+              <Route path="/interstate" element={<InterstatePage />} />
+              <Route path="/ten-print" element={<TenPrintPage />} />
+              <Route path="/chance-print" element={<ChancePrintPage />} />
+              <Route path="/user-wise" element={<UserWisePage />} />
+              <Route path="/workflow-live" element={<WorkflowLivePage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </QueryProvider>
   );
 }

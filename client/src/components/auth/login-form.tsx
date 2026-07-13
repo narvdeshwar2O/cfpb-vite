@@ -4,30 +4,30 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { useNavigate } from "react-router-dom"
 import { Mail, Lock } from "lucide-react"
 import { useState } from "react"
+import { useAuth } from "@/context/AuthContext"
 
 export function LoginForm() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState("nafis@gov.in")
+  const { login } = useAuth()
+  const [email, setEmail] = useState("admin")
   const [password, setPassword] = useState("admin")
   const [error, setError] = useState("")
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
-    // Adding a slight delay to show the loading animation for better UX
-    setTimeout(() => {
-      if (email === "nafis@gov.in" && password === "admin") {
-        localStorage.setItem('isLoggedIn', 'true')
-        navigate("/")
-      } else {
-        setError("Invalid credentials. Please use nafis@gov.in / admin")
-        setIsLoading(false)
-      }
-    }, 800)
+    const success = await login(email, password)
+    
+    if (success) {
+      navigate("/")
+    } else {
+      setError("Invalid credentials. Please try again.")
+      setIsLoading(false)
+    }
   }
 
   return (

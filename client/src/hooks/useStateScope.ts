@@ -1,8 +1,7 @@
+import { useAuth } from "@/context/AuthContext";
+
 export function useStateScope() {
-  // Read user from localStorage (set during login)
-  const storedUserStr = localStorage.getItem('user');
-  const user = storedUserStr ? JSON.parse(storedUserStr) : null;
-  const isSuperAdmin = user?.roles?.includes('Super Admin');
+  const { user, isSuperAdmin } = useAuth();
   
   // State users are scoped strictly to their state
   const scopedState = user?.state ? user.state : null;

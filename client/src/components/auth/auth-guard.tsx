@@ -1,20 +1,17 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useAuth } from "@/context/AuthContext"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { isAuthenticated } = useAuth()
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn')
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       navigate('/login')
-    } else {
-      // eslint-disable-next-line
-      setIsAuthenticated(true)
     }
-  }, [navigate])
+  }, [isAuthenticated, navigate])
 
   if (!isAuthenticated) {
     return (

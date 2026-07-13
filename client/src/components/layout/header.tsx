@@ -1,22 +1,19 @@
 import { Bell, LogOut } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { NAV_LINKS } from "@/constants/navigation"
+import { useAuth } from "@/context/AuthContext"
 
 export function Header() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   
-  // Mock user from localStorage for now
-  const storedUserStr = localStorage.getItem('user');
-  const user = storedUserStr ? JSON.parse(storedUserStr) : null;
-  const isSuperAdmin = user?.roles?.includes('Super Admin');
+  const { user, isSuperAdmin, logout } = useAuth();
   
   const currentLink = NAV_LINKS.find(link => link.href === pathname);
   const title = currentLink ? currentLink.label : "NAFIS Dashboard";
 
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
 

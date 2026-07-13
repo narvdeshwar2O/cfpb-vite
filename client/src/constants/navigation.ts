@@ -21,3 +21,9 @@ export const NAV_LINKS = [
   { label: "Overall NAFIS Status", href: "/overall-nafis", icon: BarChart },
   { label: "FPI Status", href: "/fpi", icon: ShieldCheck },
 ];
+
+export const ADMIN_NAV_LINKS = [
+  { label: "User Management", href: "/admin/users", icon: Users },
+  { label: "Roles & Permissions", href: "/admin/roles", icon: ShieldCheck },
+  { label: "Permissions", href: "/admin/permissions", icon: ShieldCheck },
+];
