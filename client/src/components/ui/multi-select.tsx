@@ -92,7 +92,7 @@ export function MultiSelect({ options, value, onChange, placeholder = "Select...
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-80">
-          <div className="sticky top-0 bg-popover flex items-center px-3 border-b">
+          <div className="sticky top-0 z-10 bg-popover flex items-center px-3 border-b">
             <Search className="h-4 w-4 mr-2 opacity-50" />
             <input
               type="text"

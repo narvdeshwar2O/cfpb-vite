@@ -5,16 +5,16 @@ import { useEnrollData } from "@/hooks/use-dashboard";
 import { useSearchParams } from "react-router-dom";
 
 const CATEGORY_COLORS = [
-  '#ef4444', // red-500
-  '#f97316', // orange-500
-  '#eab308', // yellow-500
-  '#84cc16', // lime-500
-  '#14b8a6', // teal-500
-  '#06b6d4', // cyan-500
-  '#3b82f6', // blue-500
-  '#8b5cf6', // violet-500
-  '#ec4899', // pink-500
-  '#64748b', // slate-500
+  '#60a5fa', // blue-400
+  '#34d399', // emerald-400
+  '#fbbf24', // amber-400
+  '#a78bfa', // violet-400
+  '#f472b6', // pink-400
+  '#2dd4bf', // teal-400
+  '#fb923c', // orange-400
+  '#38bdf8', // sky-400
+  '#818cf8', // indigo-400
+  '#94a3b8', // slate-400
 ];
 
 const assignColors = (data: { name: string; value: number }[]) => {

@@ -5,13 +5,24 @@ import { NAV_LINKS } from "@/constants/navigation"
 export function Header() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  
+  // Mock user from localStorage for now
+  const storedUserStr = localStorage.getItem('user');
+  const user = storedUserStr ? JSON.parse(storedUserStr) : null;
+  const isSuperAdmin = user?.roles?.includes('Super Admin');
+  
   const currentLink = NAV_LINKS.find(link => link.href === pathname);
   const title = currentLink ? currentLink.label : "NAFIS Dashboard";
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("user");
     navigate("/login");
   };
+
+  const displayName = user?.fullName || "Admin User";
+  const displayRole = user?.state ? `${user.state}` : (isSuperAdmin ? "Super Admin" : "User");
+  const initials = displayName.substring(0, 2).toUpperCase();
 
   return (
     <header className="flex h-[73px] shrink-0 items-center justify-between bg-white border-b border-slate-200 px-6 sticky top-0 z-20">
@@ -33,11 +44,11 @@ export function Header() {
         {/* User Profile & Logout */}
         <div className="flex items-center gap-3 pl-2">
           <div className="hidden md:flex flex-col text-right">
-            <span className="text-sm font-semibold text-slate-700">Admin User</span>
-            <span className="text-xs text-slate-500 font-medium">NCRB Delhi</span>
+            <span className="text-sm font-semibold text-slate-700">{displayName}</span>
+            <span className="text-xs text-slate-500 font-medium">{displayRole}</span>
           </div>
           <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-inner shadow-indigo-200/50">
-            AD
+            {initials}
           </div>
           <button onClick={handleLogout} className="p-2 ml-1 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Logout">
             <LogOut className="w-5 h-5" />

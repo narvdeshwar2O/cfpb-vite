@@ -8,11 +8,13 @@ import {
   type MultiSelectOption,
 } from "@/components/ui/multi-select";
 import { useStateDistrictMaster } from "@/hooks/use-dashboard";
+import { useStateScope } from "@/hooks/useStateScope";
 
 export function FilterBar() {
   const { pathname } = useLocation();
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isScoped } = useStateScope();
 
   const showUserIdFilter = pathname?.includes("user-wise");
 
@@ -95,17 +97,19 @@ export function FilterBar() {
       </div>
 
       <div className="flex items-center gap-3 shrink-0 z-50">
-        <div className="flex items-center gap-2">
-          <label className="text-slate-600 font-medium text-sm">State</label>
-          <div className="w-64">
-            <MultiSelect
-              options={stateOptions}
-              value={getInitialValues("state")}
-              onChange={(val) => updateUrlParam("state", val)}
-              placeholder="Select State..."
-            />
+        {!isScoped && (
+          <div className="flex items-center gap-2">
+            <label className="text-slate-600 font-medium text-sm">State</label>
+            <div className="w-64">
+              <MultiSelect
+                options={stateOptions}
+                value={getInitialValues("state")}
+                onChange={(val) => updateUrlParam("state", val)}
+                placeholder="Select State..."
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex items-center gap-2">
           <label className="text-slate-600 font-medium text-sm">District</label>
