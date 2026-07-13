@@ -12,11 +12,16 @@ import { useStateScope } from "@/hooks/useStateScope";
 
 export function FilterBar() {
   const { pathname } = useLocation();
-
+  const { isScoped, scopedState } = useStateScope();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isScoped } = useStateScope();
+  const { data: masterData } = useStateDistrictMaster();
 
   const showUserIdFilter = pathname?.includes("user-wise");
+
+  // Hide filter bar on administration routes
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
 
   // Helper to parse comma-separated string back to array
   const getInitialValues = (key: string) => {
@@ -25,8 +30,8 @@ export function FilterBar() {
     return val ? val.split(",") : ["all"];
   };
 
-  const { data: masterData } = useStateDistrictMaster();
   const selectedStates = getInitialValues("state");
+  const effectiveStates = isScoped && scopedState ? [scopedState] : selectedStates;
 
   const stateOptions: MultiSelectOption[] = [{ label: "All", value: "all" }];
   const districtOptions: MultiSelectOption[] = [{ label: "All", value: "all" }];
@@ -40,7 +45,7 @@ export function FilterBar() {
       });
 
     const isAllStatesSelected =
-      selectedStates.length === 0 || selectedStates.includes("all");
+      effectiveStates.length === 0 || effectiveStates.includes("all");
     const districtsToShow = new Set<string>();
 
     if (isAllStatesSelected) {
@@ -48,8 +53,8 @@ export function FilterBar() {
         districts.forEach((d) => districtsToShow.add(d));
       });
     } else {
-      selectedStates.forEach((state) => {
-        const districts = dataMap[state];
+      effectiveStates.forEach((state) => {
+        const districts = dataMap[state.toUpperCase()] || dataMap[state];
         if (districts) {
           districts.forEach((d) => districtsToShow.add(d));
         }

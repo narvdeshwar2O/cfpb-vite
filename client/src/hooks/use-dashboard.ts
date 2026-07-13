@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-assignment */
 import { useQuery } from "@tanstack/react-query";
 import { fetchTotalDbSize, fetchEnrollData, fetchStateDistrictMaster } from "@/services/dashboard.service";
 import { useStateScope } from "@/hooks/useStateScope";
@@ -56,13 +57,16 @@ export function useEnrollData(
   startDate?: string,
   endDate?: string
 ) {
-  const cleanState = state.includes("all") ? [] : state;
+  const { isScoped, scopedState } = useStateScope();
+  const effectiveState = isScoped && scopedState ? [scopedState] : state;
+
+  const cleanState = effectiveState.includes("all") ? [] : effectiveState;
   const cleanDistrict = district.includes("all") ? [] : district;
   
   return useQuery({
-    queryKey: ["enroll-data", state, district, startDate, endDate], // Use raw state/district
+    queryKey: ["enroll-data", effectiveState, district, startDate, endDate], 
     queryFn: async () => {
-      if (state.length === 0 || district.length === 0) {
+      if (effectiveState.length === 0 || district.length === 0) {
         return {
           success: true,
           data: {

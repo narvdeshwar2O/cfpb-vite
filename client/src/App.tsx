@@ -11,6 +11,10 @@ import { LoginForm } from "./components/auth/login-form";
 import { InterstatePage } from "./pages/InterstatePage";
 import { UserWisePage } from "./pages/UserWisePage";
 import { WorkflowLivePage } from "./pages/WorkflowLivePage";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminRoles from "./pages/admin/AdminRoles";
+import AdminPermissions from "./pages/admin/AdminPermissions";
+import { Toaster } from "@/components/ui/sonner";
 
 function DashboardLayout() {
   return (
@@ -52,8 +56,12 @@ export default function App() {
               <Route path="/chance-print" element={<ChancePrintPage />} />
               <Route path="/user-wise" element={<UserWisePage />} />
               <Route path="/workflow-live" element={<WorkflowLivePage />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/roles" element={<AdminRoles />} />
+              <Route path="/admin/permissions" element={<AdminPermissions />} />
             </Route>
           </Routes>
+          <Toaster />
         </BrowserRouter>
       </AuthProvider>
     </QueryProvider>
