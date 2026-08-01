@@ -24,7 +24,7 @@ export const config = {
   },
   jwt: {
     secret: required("JWT_SECRET"),
-    expiresIn: process.env.JWT_EXPIRES_IN ?? "8h",
+    expiresIn: (process.env.JWT_EXPIRES_IN || "8h").trim(),
   },
   corsOrigins: (process.env.CORS_ORIGINS ?? "http://localhost:4000")
     .split(",")
