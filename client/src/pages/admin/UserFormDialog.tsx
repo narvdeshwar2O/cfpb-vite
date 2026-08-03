@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import { STATE_VIEWER_ROLE } from "@/constants/rbac";
-import { STATE_OPTIONS, normalizeState } from "@/data/stateOptions";
+import { useStateDistrictMaster } from "@/shared/hooks/use-master";
 import {
   createUser,
   updateUserRoles,
@@ -57,6 +57,15 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
   const [stateValue, setStateValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const { data: masterData } = useStateDistrictMaster();
+  
+  const apiStates = React.useMemo(() => {
+    if (masterData?.data) {
+      return Object.keys(masterData.data).sort();
+    }
+    return [];
+  }, [masterData]);
+
   const isStateViewer = roles.includes(STATE_VIEWER_ROLE);
 
   // shadcn Select forbids an empty-string item value, so use a sentinel for "no state".
@@ -64,9 +73,9 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
   // Include the current value as an option if it isn't in the canonical list
   // (e.g. a legacy/typed value), so it stays selectable.
   const stateSelectOptions =
-    stateValue && !STATE_OPTIONS.includes(stateValue)
-      ? [stateValue, ...STATE_OPTIONS]
-      : STATE_OPTIONS;
+    stateValue && !apiStates.includes(stateValue)
+      ? [stateValue, ...apiStates]
+      : apiStates;
 
   // Reset the form whenever the dialog opens or the target user changes.
   useEffect(() => {
@@ -75,8 +84,15 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
     setPassword("");
     setFullName(editingUser?.fullName ?? "");
     setRoles(editingUser?.roles ?? []);
-    setStateValue(normalizeState(editingUser?.state));
-  }, [open, editingUser]);
+    
+    const rawState = editingUser?.state;
+    if (rawState) {
+      const match = apiStates.find((s) => s.toLowerCase() === rawState.toLowerCase());
+      setStateValue(match ?? rawState);
+    } else {
+      setStateValue("");
+    }
+  }, [open, editingUser, apiStates, apiStates.length]);
 
   const validate = (): string | null => {
     if (!isEdit) {

@@ -19,15 +19,18 @@ const mockData = [
   { id: 8, state: "Uttar Pradesh", districts: "Lucknow", cases: "15,800", number: "48,100", hit: "5,800", noHit: "42,300" },
 ]
 
+import { FilterBar } from "@/layouts"
+
 export function ChancePrintPage() {
   return (
-    <div className="flex flex-col gap-4 h-full">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex-1">
+    <div className="flex flex-col h-full">
+      <FilterBar />
+      <div className="p-3">
         <Table>
           <TableHeader>
             {/* Top Header Row */}
             <TableRow>
-              <TableHead rowSpan={2} className="text-center align-middle w-[80px] border-r border-slate-200">
+              <TableHead rowSpan={2} className="text-center align-middle w-20 border-r border-slate-200">
                 Sl. No
               </TableHead>
               <TableHead rowSpan={2} className="text-center align-middle border-r border-slate-200">
@@ -56,7 +59,7 @@ export function ChancePrintPage() {
               </TableHead>
             </TableRow>
           </TableHeader>
-          
+
           <TableBody>
             {mockData.map((row) => (
               <TableRow key={row.id}>

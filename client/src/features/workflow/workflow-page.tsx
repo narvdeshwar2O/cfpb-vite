@@ -1,3 +1,4 @@
+import { FilterBar } from "@/layouts";
 import {
   Table,
   TableBody,
@@ -13,132 +14,137 @@ const mockData = [
     id: 1,
     state: "Delhi",
     districts: "New Delhi",
-    tpIntra: "450",
-    tpInter: "120",
-    cpIntra: "85",
-    cpInter: "34",
+    arrested: "1,200",
+    convicted: "300",
+    externee: "45",
+    deportee: "12",
+    civil: "450",
+    suspect: "1,800",
+    uifp: "90",
   },
   {
     id: 2,
     state: "Gujarat",
     districts: "Ahmedabad",
-    tpIntra: "650",
-    tpInter: "150",
-    cpIntra: "95",
-    cpInter: "32",
+    arrested: "2,400",
+    convicted: "580",
+    externee: "55",
+    deportee: "9",
+    civil: "650",
+    suspect: "2,800",
+    uifp: "110",
   },
   {
     id: 3,
     state: "Karnataka",
     districts: "Bengaluru",
-    tpIntra: "890",
-    tpInter: "210",
-    cpIntra: "150",
-    cpInter: "67",
+    arrested: "3,200",
+    convicted: "850",
+    externee: "80",
+    deportee: "18",
+    civil: "950",
+    suspect: "3,900",
+    uifp: "160",
   },
   {
     id: 4,
     state: "Kerala",
     districts: "Thiruvananthapuram",
-    tpIntra: "340",
-    tpInter: "85",
-    cpIntra: "45",
-    cpInter: "18",
+    arrested: "1,100",
+    convicted: "240",
+    externee: "25",
+    deportee: "4",
+    civil: "320",
+    suspect: "1,200",
+    uifp: "60",
   },
   {
     id: 5,
     state: "Maharashtra",
     districts: "Mumbai",
-    tpIntra: "1,200",
-    tpInter: "340",
-    cpIntra: "210",
-    cpInter: "89",
+    arrested: "4,500",
+    convicted: "1,100",
+    externee: "120",
+    deportee: "34",
+    civil: "1,200",
+    suspect: "5,400",
+    uifp: "210",
   },
   {
     id: 6,
     state: "Rajasthan",
     districts: "Jaipur",
-    tpIntra: "560",
-    tpInter: "130",
-    cpIntra: "88",
-    cpInter: "29",
+    arrested: "1,900",
+    convicted: "490",
+    externee: "45",
+    deportee: "11",
+    civil: "520",
+    suspect: "2,100",
+    uifp: "95",
   },
   {
     id: 7,
     state: "Tamil Nadu",
     districts: "Chennai",
-    tpIntra: "780",
-    tpInter: "190",
-    cpIntra: "120",
-    cpInter: "45",
+    arrested: "2,900",
+    convicted: "720",
+    externee: "65",
+    deportee: "14",
+    civil: "800",
+    suspect: "3,100",
+    uifp: "140",
   },
   {
     id: 8,
     state: "Uttar Pradesh",
     districts: "Lucknow",
-    tpIntra: "2,500",
-    tpInter: "560",
-    cpIntra: "450",
-    cpInter: "145",
+    arrested: "8,100",
+    convicted: "2,300",
+    externee: "250",
+    deportee: "67",
+    civil: "2,500",
+    suspect: "9,800",
+    uifp: "450",
   },
 ];
 
-import { FilterBar } from "@/layouts";
-
-export function InterstatePage() {
+export function WorkflowPage() {
   return (
     <div className="flex flex-col h-full">
       <FilterBar />
+
       <div className="p-3">
         <Table>
           <TableHeader>
-            {/* Top Header Row */}
             <TableRow>
-              <TableHead
-                rowSpan={2}
-                className="text-center align-middle w-20 border-r border-slate-200"
-              >
+              <TableHead className="text-center align-middle w-20 border-r border-slate-200">
                 Sl. No
               </TableHead>
-              <TableHead
-                rowSpan={2}
-                className="text-center align-middle border-r border-slate-200"
-              >
-                State/UT
+              <TableHead className="text-center align-middle border-r border-slate-200">
+                State/UTs/CLEAs
               </TableHead>
-              <TableHead
-                rowSpan={2}
-                className="text-center align-middle border-r border-slate-200"
-              >
+              <TableHead className="text-center align-middle border-r border-slate-200">
                 District Name
               </TableHead>
-              <TableHead
-                colSpan={2}
-                className="text-center align-middle border-r border-b border-slate-200"
-              >
-                Ten print HIT
-              </TableHead>
-              <TableHead
-                colSpan={2}
-                className="text-center align-middle border-b border-slate-200"
-              >
-                Chance Print HIT
-              </TableHead>
-            </TableRow>
-            {/* Sub Header Row */}
-            <TableRow>
               <TableHead className="text-center align-middle border-r border-slate-200">
-                Intra State
+                Arrested
               </TableHead>
               <TableHead className="text-center align-middle border-r border-slate-200">
-                Inter State
+                Convicted
               </TableHead>
               <TableHead className="text-center align-middle border-r border-slate-200">
-                Intra State
+                Externee
               </TableHead>
-              <TableHead className="text-center align-middle">
-                Inter State
+              <TableHead className="text-center align-middle border-r border-slate-200">
+                Deportee
               </TableHead>
+              <TableHead className="text-center align-middle border-r border-slate-200">
+                Civil
+              </TableHead>
+              <TableHead className="text-center align-middle border-r border-slate-200">
+                Suspect
+              </TableHead>
+              <TableHead className="text-center align-middle">UIFP</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -155,16 +161,25 @@ export function InterstatePage() {
                   {row.districts}
                 </TableCell>
                 <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.tpIntra}
+                  {row.arrested}
                 </TableCell>
                 <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.tpInter}
+                  {row.convicted}
                 </TableCell>
                 <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.cpIntra}
+                  {row.externee}
+                </TableCell>
+                <TableCell className="text-center align-middle border-r border-slate-200">
+                  {row.deportee}
+                </TableCell>
+                <TableCell className="text-center align-middle border-r border-slate-200">
+                  {row.civil}
+                </TableCell>
+                <TableCell className="text-center align-middle border-r border-slate-200">
+                  {row.suspect}
                 </TableCell>
                 <TableCell className="text-center align-middle">
-                  {row.cpInter}
+                  {row.uifp}
                 </TableCell>
               </TableRow>
             ))}
