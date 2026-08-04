@@ -34,6 +34,6 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ message: "Internal server error" });
 });
 
-app.listen(config.port, () => {
-  console.log(`Auth server listening on http://localhost:${config.port}`);
+app.listen(config.port, "0.0.0.0", () => {
+  console.log(`Auth server listening on port ${config.port} (0.0.0.0)`);
 });
