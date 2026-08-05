@@ -8,7 +8,7 @@ import { usePieChart } from "../hooks/use-pie-chart";
 interface PieChartProps {
   id: string;
   title: string;
-  data: Array<{ name: string; value: number; fill?: string }>;
+  data: Array<{ name: string; value: number; fill?: string; percentage?: number }>;
 }
 
 export function PieChart({ id, title, data }: PieChartProps) {

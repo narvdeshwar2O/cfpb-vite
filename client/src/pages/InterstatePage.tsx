@@ -1,176 +1,54 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { FilterBar } from "@/layouts";
+import { useFilters } from "@/app/providers/filter-provider";
+import { useInterstateStatus } from "@/features/interstate/hooks/use-interstate";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import type { InterstateStatusItem } from "@/features/interstate/types/interstate.types";
 
-// Mock data
-const mockData = [
-  {
-    id: 1,
-    state: "Delhi",
-    districts: "New Delhi",
-    tpIntra: "450",
-    tpInter: "120",
-    cpIntra: "85",
-    cpInter: "34",
+const columns: ColumnDef<InterstateStatusItem>[] = [
+  { 
+    key: "id", 
+    label: "Sl. No", 
+    headerClassName: "text-center align-middle w-20 border-r border-slate-200",
+    cellClassName: "text-center align-middle font-medium text-slate-700 border-r border-slate-200",
+    render: (_, idx) => idx + 1 
   },
-  {
-    id: 2,
-    state: "Gujarat",
-    districts: "Ahmedabad",
-    tpIntra: "650",
-    tpInter: "150",
-    cpIntra: "95",
-    cpInter: "32",
+  { 
+    key: "state", 
+    label: "State/UTs/CLEAs",
+    cellClassName: "text-center align-middle font-medium text-indigo-600 border-r border-slate-200 uppercase",
   },
-  {
-    id: 3,
-    state: "Karnataka",
-    districts: "Bengaluru",
-    tpIntra: "890",
-    tpInter: "210",
-    cpIntra: "150",
-    cpInter: "67",
-  },
-  {
-    id: 4,
-    state: "Kerala",
-    districts: "Thiruvananthapuram",
-    tpIntra: "340",
-    tpInter: "85",
-    cpIntra: "45",
-    cpInter: "18",
-  },
-  {
-    id: 5,
-    state: "Maharashtra",
-    districts: "Mumbai",
-    tpIntra: "1,200",
-    tpInter: "340",
-    cpIntra: "210",
-    cpInter: "89",
-  },
-  {
-    id: 6,
-    state: "Rajasthan",
-    districts: "Jaipur",
-    tpIntra: "560",
-    tpInter: "130",
-    cpIntra: "88",
-    cpInter: "29",
-  },
-  {
-    id: 7,
-    state: "Tamil Nadu",
-    districts: "Chennai",
-    tpIntra: "780",
-    tpInter: "190",
-    cpIntra: "120",
-    cpInter: "45",
-  },
-  {
-    id: 8,
-    state: "Uttar Pradesh",
-    districts: "Lucknow",
-    tpIntra: "2,500",
-    tpInter: "560",
-    cpIntra: "450",
-    cpInter: "145",
-  },
+  { key: "districts", label: "District Name", render: () => "All Districts", cellClassName: "text-center align-middle border-r border-slate-200" },
+  { key: "tp_intra_hit", label: "Ten print HIT (Intra State)", cellClassName: "text-center align-middle border-r border-slate-200", render: (row) => row.tp_intra_hit?.toLocaleString() || 0 },
+  { key: "tp_inter_hit", label: "Ten print HIT (Inter State)", cellClassName: "text-center align-middle border-r border-slate-200", render: (row) => row.tp_inter_hit?.toLocaleString() || 0 },
+  { key: "lt_intra_hit", label: "Chance Print HIT (Intra State)", cellClassName: "text-center align-middle border-r border-slate-200", render: (row) => row.lt_intra_hit?.toLocaleString() || 0 },
+  { key: "lt_inter_hit", label: "Chance Print HIT (Inter State)", headerClassName: "text-center align-middle", cellClassName: "text-center align-middle", render: (row) => row.lt_inter_hit?.toLocaleString() || 0 },
 ];
 
-import { FilterBar } from "@/layouts";
-
 export function InterstatePage() {
+  const { getFilterArray, getFilterString } = useFilters();
+  const stateParam = getFilterArray("state");
+  const districtParam = getFilterArray("district");
+  const startDate = getFilterString("start_date") || undefined;
+  const endDate = getFilterString("end_date") || undefined;
+
+  const { data, isLoading, isError } = useInterstateStatus(
+    stateParam,
+    districtParam,
+    startDate,
+    endDate
+  );
+
+  const tableData = data?.data || [];
+
   return (
     <div className="flex flex-col h-full">
       <FilterBar />
-      <div className="p-3">
-        <Table>
-          <TableHeader>
-            {/* Top Header Row */}
-            <TableRow>
-              <TableHead
-                rowSpan={2}
-                className="text-center align-middle w-20 border-r border-slate-200"
-              >
-                Sl. No
-              </TableHead>
-              <TableHead
-                rowSpan={2}
-                className="text-center align-middle border-r border-slate-200"
-              >
-                State/UT
-              </TableHead>
-              <TableHead
-                rowSpan={2}
-                className="text-center align-middle border-r border-slate-200"
-              >
-                District Name
-              </TableHead>
-              <TableHead
-                colSpan={2}
-                className="text-center align-middle border-r border-b border-slate-200"
-              >
-                Ten print HIT
-              </TableHead>
-              <TableHead
-                colSpan={2}
-                className="text-center align-middle border-b border-slate-200"
-              >
-                Chance Print HIT
-              </TableHead>
-            </TableRow>
-            {/* Sub Header Row */}
-            <TableRow>
-              <TableHead className="text-center align-middle border-r border-slate-200">
-                Intra State
-              </TableHead>
-              <TableHead className="text-center align-middle border-r border-slate-200">
-                Inter State
-              </TableHead>
-              <TableHead className="text-center align-middle border-r border-slate-200">
-                Intra State
-              </TableHead>
-              <TableHead className="text-center align-middle">
-                Inter State
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {mockData.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell className="text-center align-middle font-medium text-slate-700 border-r border-slate-200">
-                  {row.id}
-                </TableCell>
-                <TableCell className="text-center align-middle font-medium text-indigo-600 border-r border-slate-200">
-                  {row.state}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.districts}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.tpIntra}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.tpInter}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.cpIntra}
-                </TableCell>
-                <TableCell className="text-center align-middle">
-                  {row.cpInter}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable 
+        columns={columns} 
+        data={tableData} 
+        isLoading={isLoading} 
+        isError={isError} 
+      />
     </div>
   );
 }

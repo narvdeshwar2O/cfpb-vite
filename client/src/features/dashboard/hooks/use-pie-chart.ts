@@ -3,7 +3,7 @@ import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
 import am4themes_animated from "@amcharts/amcharts4/themes/animated";
 
-export function usePieChart(id: string, data: Array<{ name: string; value: number; fill?: string }>, chartType: "pie" | "bar") {
+export function usePieChart(id: string, data: Array<{ name: string; value: number; fill?: string; percentage?: number }>, chartType: "pie" | "bar") {
   const chartRef = useRef<am4charts.Chart | null>(null);
 
   useLayoutEffect(() => {
@@ -30,7 +30,15 @@ export function usePieChart(id: string, data: Array<{ name: string; value: numbe
       series.slices.template.propertyFields.fill = "fill";
       series.labels.template.disabled = true;
       series.ticks.template.disabled = true;
-      series.slices.template.tooltipText = "{category}: {value.percent.formatNumber('#.0')}% ({value})";
+      
+      // If we provided a percentage, use it, otherwise fallback to AMChart's calculation
+      series.slices.template.adapter.add("tooltipText", (_text, target) => {
+        const dataContext = target.dataItem?.dataContext as { percentage?: number };
+        if (dataContext && dataContext.percentage !== undefined) {
+          return "{category}: {percentage}% ({value})";
+        }
+        return "{category}: {value.percent.formatNumber('#.0')}% ({value})";
+      });
 
       let hoverState = series.slices.template.states.getKey("hover");
       if (!hoverState) {
@@ -57,7 +65,14 @@ export function usePieChart(id: string, data: Array<{ name: string; value: numbe
       series.dataFields.valueY = "value";
       series.dataFields.categoryX = "name";
       series.columns.template.propertyFields.fill = "fill";
-      series.columns.template.tooltipText = "{categoryX}: [bold]{valueY}[/]";
+      
+      series.columns.template.adapter.add("tooltipText", (_text, target) => {
+        const dataContext = target.dataItem?.dataContext as { percentage?: number };
+        if (dataContext && dataContext.percentage !== undefined) {
+          return "{categoryX}: [bold]{percentage}% ({valueY})[/]";
+        }
+        return "{categoryX}: [bold]{valueY}[/]";
+      });
     }
 
     chartRef.current = chart;

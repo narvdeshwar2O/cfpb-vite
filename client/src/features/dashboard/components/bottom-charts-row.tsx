@@ -17,7 +17,7 @@ const CATEGORY_COLORS = [
   '#94a3b8', // slate-400
 ];
 
-const assignColors = (data: { name: string; value: number }[]) => {
+const assignColors = (data: { name: string; value: number; percentage?: number }[]) => {
   return data.map((item, idx) => ({
     ...item,
     fill: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
@@ -40,7 +40,7 @@ export function BottomChartsRow() {
   );
 
   // If loading or error, we just render empty or skeleton charts
-  type ChartData = { name: string; value: number; fill?: string };
+  type ChartData = { name: string; value: number; fill?: string; percentage?: number };
   let mesaData: ChartData[] = [];
   let slipData: ChartData[] = [];
   let stateData: ChartData[] = [];
@@ -50,28 +50,28 @@ export function BottomChartsRow() {
     const mesa = enrollData.data.mesa;
     if (mesa) {
       mesaData = assignColors([
-        { name: "Arrested", value: mesa.arresty_received_tp },
-        { name: "Convicted", value: mesa.convicted_received_tp },
-        { name: "Externeee", value: mesa.externee_received_tp },
-        { name: "Deportee", value: mesa.deportee_received_tp },
-        { name: "UDB", value: mesa.deadbody_received_tp },
-        { name: "Suspect", value: mesa.suspect_received_tp },
-        { name: "UIFP", value: mesa.uifp_received_tp },
-        { name: "Absconder", value: mesa.absconder_received_tp },
+        { name: "Arrested", value: mesa.arresty_received_tp, percentage: mesa.arresty_received_tp_percentage },
+        { name: "Convicted", value: mesa.convicted_received_tp, percentage: mesa.convicted_received_tp_percentage },
+        { name: "Externeee", value: mesa.externee_received_tp, percentage: mesa.externee_received_tp_percentage },
+        { name: "Deportee", value: mesa.deportee_received_tp, percentage: mesa.deportee_received_tp_percentage },
+        { name: "UDB", value: mesa.deadbody_received_tp, percentage: mesa.deadbody_received_tp_percentage },
+        { name: "Suspect", value: mesa.suspect_received_tp, percentage: mesa.suspect_received_tp_percentage },
+        { name: "UIFP", value: mesa.uifp_received_tp, percentage: mesa.uifp_received_tp_percentage },
+        { name: "Absconder", value: mesa.absconder_received_tp, percentage: mesa.absconder_received_tp_percentage },
       ]);
     }
 
     const slip = enrollData.data.slip;
     if (slip) {
       slipData = assignColors([
-        { name: "Arrested", value: slip.arresty_received_tp },
-        { name: "Convicted", value: slip.convicted_received_tp },
-        { name: "Externeee", value: slip.externee_received_tp },
-        { name: "Deportee", value: slip.deportee_received_tp },
-        { name: "UDB", value: slip.deadbody_received_tp },
-        { name: "Suspect", value: slip.suspect_received_tp },
-        { name: "UIFP", value: slip.uifp_received_tp },
-        { name: "Absconder", value: slip.absconder_received_tp },
+        { name: "Arrested", value: slip.arresty_received_tp, percentage: slip.arresty_received_tp_percentage },
+        { name: "Convicted", value: slip.convicted_received_tp, percentage: slip.convicted_received_tp_percentage },
+        { name: "Externeee", value: slip.externee_received_tp, percentage: slip.externee_received_tp_percentage },
+        { name: "Deportee", value: slip.deportee_received_tp, percentage: slip.deportee_received_tp_percentage },
+        { name: "UDB", value: slip.deadbody_received_tp, percentage: slip.deadbody_received_tp_percentage },
+        { name: "Suspect", value: slip.suspect_received_tp, percentage: slip.suspect_received_tp_percentage },
+        { name: "UIFP", value: slip.uifp_received_tp, percentage: slip.uifp_received_tp_percentage },
+        { name: "Absconder", value: slip.absconder_received_tp, percentage: slip.absconder_received_tp_percentage },
       ]);
     }
 

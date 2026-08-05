@@ -1,12 +1,6 @@
 import { USER_WISE_COLUMNS } from "@/constants/table-columns";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { FilterBar } from "@/layouts";
+import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 
 // Mock data
 const mockData = [
@@ -116,67 +110,28 @@ const mockData = [
   },
 ];
 
-import { FilterBar } from "@/layouts";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const columns: ColumnDef<any>[] = USER_WISE_COLUMNS.map((col, idx) => ({
+  key: col.key === "slNo" ? "id" : col.key,
+  label: col.label,
+  headerClassName: `border-r border-slate-200 text-center align-middle ${idx === 0 ? "w-20" : ""}`,
+  cellClassName: () => {
+    let classes = "text-center align-middle border-r border-slate-200";
+    if (col.key === "slNo") classes += " font-medium text-slate-700";
+    if (col.key === "state") classes += " font-medium text-indigo-600";
+    if (idx === USER_WISE_COLUMNS.length - 1) classes = "text-center align-middle";
+    return classes;
+  }
+}));
 
 export function UserWisePage() {
   return (
     <div className="flex flex-col h-full">
       <FilterBar />
-      <div className="p-3">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {USER_WISE_COLUMNS.map((col, idx) => (
-                <TableHead
-                  key={col.key}
-                  className={`border-r border-slate-200 text-center align-middle ${idx === 0 ? "w-20" : ""}`}
-                >
-                  {col.label}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockData.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell className="font-medium text-slate-700 text-center align-middle border-r border-slate-200">
-                  {row.id}
-                </TableCell>
-                <TableCell className="font-medium text-indigo-600 text-center align-middle border-r border-slate-200">
-                  {row.state}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.districts}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.policeStation}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.users}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.tpEnrolment}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.tpVerified}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.tpDeleted}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.cpEnrolled}
-                </TableCell>
-                <TableCell className="text-center align-middle border-r border-slate-200">
-                  {row.cpVerified}
-                </TableCell>
-                <TableCell className="text-center align-middle">
-                  {row.cpDeleted}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable 
+        columns={columns} 
+        data={mockData} 
+      />
     </div>
   );
 }
