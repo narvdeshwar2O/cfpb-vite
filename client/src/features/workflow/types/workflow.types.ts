@@ -6,7 +6,9 @@ export interface WorkflowStatusItem {
   deadbody: number;
   deportee: number;
   externee: number;
-  state: string;
+  state?: string;
+  district?: string;
+  police_station?: string;
   suspect: number;
 }
 

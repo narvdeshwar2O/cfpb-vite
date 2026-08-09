@@ -1,7 +1,9 @@
 export interface ChancePrintStatusItem {
   hit: number;
   nohit: number;
-  state: string;
+  state?: string;
+  district?: string;
+  police_station?: string;
   total_chance_print_cases: number;
   total_chance_prints: number;
 }

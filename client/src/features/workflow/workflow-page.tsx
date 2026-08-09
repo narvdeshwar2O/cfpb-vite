@@ -5,35 +5,13 @@ import { useWorkflowStatus } from "@/features/workflow/hooks/use-workflow";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import type { WorkflowStatusItem } from "@/features/workflow/types/workflow.types";
 import { ROUTES } from "@/shared/constants/routes";
-
-const columns: ColumnDef<WorkflowStatusItem>[] = [
-  { 
-    key: "id", 
-    label: "Sl. No", 
-    headerClassName: "text-center align-middle w-20 border-r border-slate-200",
-    cellClassName: "text-center align-middle font-medium text-slate-700 border-r border-slate-200",
-    render: (_, idx) => idx + 1 
-  },
-  { 
-    key: "state", 
-    label: "State/UTs/CLEAs",
-    cellClassName: "text-center align-middle font-medium text-indigo-600 border-r border-slate-200 uppercase",
-  },
-  { key: "arrested", label: "Arrested", render: (row) => row.arrested?.toLocaleString() || 0 },
-  { key: "convicted", label: "Convicted", render: (row) => row.convicted?.toLocaleString() || 0 },
-  { key: "externee", label: "Externee", render: (row) => row.externee?.toLocaleString() || 0 },
-  { key: "deportee", label: "Deportee", render: (row) => row.deportee?.toLocaleString() || 0 },
-  { key: "suspect", label: "Suspect", render: (row) => row.suspect?.toLocaleString() || 0 },
-  { key: "absconder", label: "Absconder", render: (row) => row.absconder?.toLocaleString() || 0 },
-  { key: "deadbody", label: "Deadbody", render: (row) => row.deadbody?.toLocaleString() || 0 },
-  { key: "UIFP", label: "UIFP", headerClassName: "text-center align-middle", cellClassName: "text-center align-middle", render: (row) => row.UIFP?.toLocaleString() || 0 },
-];
+import { useMemo } from "react";
 
 export function WorkflowPage() {
   const location = useLocation();
   const type = location.pathname === ROUTES.workflowSlip ? "slip-capture" : "live-enrollment";
 
-  const { getFilterArray, getFilterString } = useFilters();
+  const { getFilterArray, getFilterString, setFilter } = useFilters();
   const stateParam = getFilterArray("state");
   const districtParam = getFilterArray("district");
   const startDate = getFilterString("start_date") || undefined;
@@ -48,6 +26,72 @@ export function WorkflowPage() {
   );
 
   const tableData = data?.data || [];
+
+  const columns = useMemo<ColumnDef<WorkflowStatusItem>[]>(() => {
+    const isStateSelected = stateParam.length > 0 && !stateParam.includes("all");
+    const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
+    
+    let locationKey: "state" | "district" | "police_station" = "state";
+    let locationLabel = "State/UTs/CLEAs";
+    
+    if (isDistrictSelected) {
+      locationKey = "police_station";
+      locationLabel = "Police Station";
+    } else if (isStateSelected) {
+      locationKey = "district";
+      locationLabel = "District Name";
+    }
+
+    return [
+      { 
+        key: "id", 
+        label: "Sl. No", 
+        headerClassName: "text-center align-middle w-20 border-r border-slate-200",
+        cellClassName: "text-center align-middle font-medium text-slate-700 border-r border-slate-200",
+        render: (_, idx) => idx + 1 
+      },
+      { 
+        key: locationKey, 
+        label: locationLabel,
+        headerClassName: "text-center align-middle border-r border-slate-200",
+        cellClassName: "text-center align-middle border-r border-slate-200",
+        render: (row) => {
+          const val = row[locationKey];
+          if (!val) return "N/A";
+          
+          if (locationKey === "state") {
+            return (
+              <span 
+                className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"
+                onClick={() => setFilter("state", [val])}
+              >
+                {val}
+              </span>
+            );
+          } else if (locationKey === "district") {
+            return (
+              <span 
+                className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"
+                onClick={() => setFilter("district", [val])}
+              >
+                {val}
+              </span>
+            );
+          }
+          
+          return <span className="font-medium text-slate-700 uppercase">{val}</span>;
+        }
+      },
+      { key: "arrested", label: "Arrested", render: (row) => row.arrested?.toLocaleString() || 0 },
+      { key: "convicted", label: "Convicted", render: (row) => row.convicted?.toLocaleString() || 0 },
+      { key: "externee", label: "Externee", render: (row) => row.externee?.toLocaleString() || 0 },
+      { key: "deportee", label: "Deportee", render: (row) => row.deportee?.toLocaleString() || 0 },
+      { key: "suspect", label: "Suspect", render: (row) => row.suspect?.toLocaleString() || 0 },
+      { key: "absconder", label: "Absconder", render: (row) => row.absconder?.toLocaleString() || 0 },
+      { key: "deadbody", label: "Deadbody", render: (row) => row.deadbody?.toLocaleString() || 0 },
+      { key: "UIFP", label: "UIFP", headerClassName: "text-center align-middle", cellClassName: "text-center align-middle", render: (row) => row.UIFP?.toLocaleString() || 0 },
+    ];
+  }, [stateParam, districtParam, setFilter]);
 
   return (
     <div className="flex flex-col h-full">
