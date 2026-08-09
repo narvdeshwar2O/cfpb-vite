@@ -67,16 +67,19 @@ export function UserWisePage() {
           const val = row[key];
           
           if (key === locationKey && val) {
+            // Do not make Police Station clickable since it's the lowest level of drill down
+            if (locationKey === "policeStation") {
+              return <span className="font-medium text-slate-700 uppercase">{val as string}</span>;
+            }
+            
             return (
               <span 
-                className="font-medium text-indigo-600 cursor-pointer hover:underline"
+                className="font-medium text-indigo-600 cursor-pointer hover:underline uppercase"
                 onClick={() => {
                   if (!isStateSelected) {
                     setFilter("state", [val as string]);
                   } else if (!isDistrictSelected) {
                     setFilter("district", [val as string]);
-                  } else if (!isPSSelected) {
-                    setFilter("police_station", [val as string]);
                   }
                 }}
               >
@@ -85,7 +88,7 @@ export function UserWisePage() {
             );
           }
           
-          return val as string;
+          return typeof val === 'string' ? val.toUpperCase() : (val as string);
         }
       };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
