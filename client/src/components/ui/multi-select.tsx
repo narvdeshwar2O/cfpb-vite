@@ -21,8 +21,11 @@ interface MultiSelectProps {
 export function MultiSelect({ options, value, onChange, placeholder = "Select...", className }: MultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [visibleCount, setVisibleCount] = useState(10);
 
-  const filteredOptions = options.filter((opt) => opt.label.toLowerCase().includes(search.toLowerCase()));
+  const filteredOptions = options.filter((opt) => 
+    (opt.label || "").toLowerCase().includes((search || "").toLowerCase())
+  );
 
   const toggleOption = (optValue: string) => {
     if (optValue === "all") {
@@ -43,8 +46,23 @@ export function MultiSelect({ options, value, onChange, placeholder = "Select...
     onChange(value.filter((v) => v !== optValue));
   };
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 20) {
+      if (visibleCount < filteredOptions.length) {
+        setVisibleCount((prev) => prev + 10);
+      }
+    }
+  };
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (open) {
+        setSearch("");
+        setVisibleCount(10);
+      }
+    }}>
       <PopoverTrigger asChild>
         <div
           className={cn(
@@ -87,12 +105,18 @@ export function MultiSelect({ options, value, onChange, placeholder = "Select...
             placeholder="Search..."
             className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setVisibleCount(10); // Reset count on search
+            }}
           />
         </div>
-        <div className="p-1 max-h-60 overflow-auto">
+        <div 
+          className="p-1 max-h-60 overflow-auto"
+          onScroll={handleScroll}
+        >
           {filteredOptions.length === 0 && <div className="py-6 text-center text-sm text-muted-foreground">No options found.</div>}
-          {filteredOptions.map((opt) => {
+          {filteredOptions.slice(0, visibleCount).map((opt) => {
             const isSelected = value.includes(opt.value) || value.includes("all");
             return (
               <div

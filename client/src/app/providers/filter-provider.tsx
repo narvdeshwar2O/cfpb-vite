@@ -3,6 +3,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 interface FilterState {
   state: string[];
   district: string[];
+  police_station: string[];
   start_date: string;
   end_date: string;
 }
@@ -17,6 +18,7 @@ interface FilterContextType {
 const defaultState: FilterState = {
   state: ["all"],
   district: ["all"],
+  police_station: ["all"],
   start_date: "",
   end_date: "",
 };

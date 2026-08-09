@@ -1,137 +1,126 @@
+import { useMemo } from "react";
 import { USER_WISE_COLUMNS } from "@/constants/table-columns";
 import { FilterBar } from "@/layouts";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
-
-// Mock data
-const mockData = [
-  {
-    id: 1,
-    state: "Delhi",
-    districts: "New Delhi",
-    policeStation: "Connaught Place",
-    users: "45",
-    tpEnrolment: "15,200",
-    tpVerified: "14,500",
-    tpDeleted: "150",
-    cpEnrolled: "2,300",
-    cpVerified: "2,100",
-    cpDeleted: "20",
-  },
-  {
-    id: 2,
-    state: "Gujarat",
-    districts: "Ahmedabad",
-    policeStation: "Navrangpura",
-    users: "64",
-    tpEnrolment: "24,500",
-    tpVerified: "23,900",
-    tpDeleted: "130",
-    cpEnrolled: "4,800",
-    cpVerified: "4,600",
-    cpDeleted: "30",
-  },
-  {
-    id: 3,
-    state: "Karnataka",
-    districts: "Bengaluru",
-    policeStation: "Koramangala",
-    users: "92",
-    tpEnrolment: "31,400",
-    tpVerified: "30,900",
-    tpDeleted: "210",
-    cpEnrolled: "6,500",
-    cpVerified: "6,300",
-    cpDeleted: "45",
-  },
-  {
-    id: 4,
-    state: "Kerala",
-    districts: "Thiruvananthapuram",
-    policeStation: "Pettah",
-    users: "35",
-    tpEnrolment: "12,300",
-    tpVerified: "12,100",
-    tpDeleted: "40",
-    cpEnrolled: "2,900",
-    cpVerified: "2,850",
-    cpDeleted: "15",
-  },
-  {
-    id: 5,
-    state: "Maharashtra",
-    districts: "Mumbai",
-    policeStation: "Colaba",
-    users: "120",
-    tpEnrolment: "45,600",
-    tpVerified: "44,100",
-    tpDeleted: "350",
-    cpEnrolled: "8,900",
-    cpVerified: "8,200",
-    cpDeleted: "120",
-  },
-  {
-    id: 6,
-    state: "Rajasthan",
-    districts: "Jaipur",
-    policeStation: "Vidhyadhar Nagar",
-    users: "55",
-    tpEnrolment: "21,800",
-    tpVerified: "21,100",
-    tpDeleted: "220",
-    cpEnrolled: "4,200",
-    cpVerified: "4,000",
-    cpDeleted: "60",
-  },
-  {
-    id: 7,
-    state: "Tamil Nadu",
-    districts: "Chennai",
-    policeStation: "Anna Nagar",
-    users: "78",
-    tpEnrolment: "28,900",
-    tpVerified: "28,200",
-    tpDeleted: "180",
-    cpEnrolled: "5,100",
-    cpVerified: "4,900",
-    cpDeleted: "50",
-  },
-  {
-    id: 8,
-    state: "Uttar Pradesh",
-    districts: "Lucknow",
-    policeStation: "Hazratganj",
-    users: "85",
-    tpEnrolment: "62,100",
-    tpVerified: "60,050",
-    tpDeleted: "500",
-    cpEnrolled: "12,400",
-    cpVerified: "11,800",
-    cpDeleted: "180",
-  },
-];
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const columns: ColumnDef<any>[] = USER_WISE_COLUMNS.map((col, idx) => ({
-  key: col.key === "slNo" ? "id" : col.key,
-  label: col.label,
-  headerClassName: `border-r border-slate-200 text-center align-middle ${idx === 0 ? "w-20" : ""}`,
-  cellClassName: () => {
-    let classes = "text-center align-middle border-r border-slate-200";
-    if (col.key === "slNo") classes += " font-medium text-slate-700";
-    if (col.key === "state") classes += " font-medium text-indigo-600";
-    if (idx === USER_WISE_COLUMNS.length - 1) classes = "text-center align-middle";
-    return classes;
-  }
-}));
+import { useFilters } from "@/app/providers/filter-provider";
+import { useUserWiseStatus } from "@/features/user-wise/hooks/use-user-wise";
 
 export function UserWisePage() {
+  const { getFilterArray, getFilterString, setFilter } = useFilters();
+  
+  const selectedState = getFilterArray("state");
+  const selectedDistrict = getFilterArray("district");
+  const selectedPS = getFilterArray("police_station");
+  const startDate = getFilterString("start_date");
+  const endDate = getFilterString("end_date");
+
+  const { data: userWiseResponse, isLoading, isError } = useUserWiseStatus(
+    selectedState,
+    selectedDistrict,
+    selectedPS,
+    startDate,
+    endDate
+  );
+
+  const isStateSelected = selectedState.length === 1 && selectedState[0] !== "all";
+  const isDistrictSelected = selectedDistrict.length === 1 && selectedDistrict[0] !== "all";
+  const isPSSelected = selectedPS.length === 1 && selectedPS[0] !== "all";
+
+  const columns = useMemo(() => {
+    // Determine the dynamic column: State vs District vs Police Station
+    let locationLabel = "State/UTs/CLEAs";
+    let locationKey = "state";
+
+    if (isPSSelected) {
+      locationLabel = "Police Station";
+      locationKey = "policeStation";
+    } else if (isDistrictSelected) {
+      locationLabel = "Police Station";
+      locationKey = "policeStation";
+    } else if (isStateSelected) {
+      locationLabel = "District Name";
+      locationKey = "districts";
+    }
+
+    return USER_WISE_COLUMNS.map((col, idx) => {
+      let key = col.key === "slNo" ? "id" : col.key;
+      let label = col.label;
+
+      if (key === "state" || key === "districts" || key === "policeStation") {
+        if (key !== "state") return null;
+        key = locationKey;
+        label = locationLabel;
+      }
+
+      return {
+        key,
+        label,
+        headerClassName: `border-r border-slate-200 text-center align-middle ${idx === 0 ? "w-20" : ""}`,
+        cellClassName: () => {
+          let classes = "text-center align-middle border-r border-slate-200";
+          if (key === "id") classes += " font-medium text-slate-700";
+          if (idx === USER_WISE_COLUMNS.length - 1) classes = "text-center align-middle";
+          return classes;
+        },
+        render: (row: Record<string, unknown>, rowIdx: number) => {
+          if (key === "id") return rowIdx + 1;
+          const val = row[key];
+          
+          if (key === locationKey && val) {
+            return (
+              <span 
+                className="font-medium text-indigo-600 cursor-pointer hover:underline"
+                onClick={() => {
+                  if (!isStateSelected) {
+                    setFilter("state", [val as string]);
+                  } else if (!isDistrictSelected) {
+                    setFilter("district", [val as string]);
+                  } else if (!isPSSelected) {
+                    setFilter("police_station", [val as string]);
+                  }
+                }}
+              >
+                {val as string}
+              </span>
+            );
+          }
+          
+          return val as string;
+        }
+      };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }).filter(Boolean) as ColumnDef<any>[];
+  }, [isStateSelected, isDistrictSelected, isPSSelected, setFilter]);
+
+  const tableData = useMemo(() => {
+    if (!userWiseResponse?.data) return [];
+    
+    return userWiseResponse.data.map((item, idx) => ({
+      id: idx + 1,
+      state: item.state,
+      districts: item.district,
+      policeStation: item.police_station,
+      users: item.unique_user_count || 0,
+      tpEnrolment: item.tp_enroll || 0,
+      tpVerified: item.tp_verified || 0,
+      tpDeleted: item.tp_delete || 0,
+      cpEnrolled: item.cp_enroll || 0,
+      cpVerified: item.cp_verified || 0,
+      cpDeleted: item.cp_delete || 0,
+    }));
+  }, [userWiseResponse]);
+
   return (
     <div className="flex flex-col h-full">
       <FilterBar />
-      <DataTable 
-        columns={columns} 
-        data={mockData} 
-      />
+      <div className="flex-1 overflow-auto">
+        <DataTable 
+          columns={columns} 
+          data={tableData} 
+          isLoading={isLoading}
+          isError={isError}
+        />
+      </div>
     </div>
   );
 }
