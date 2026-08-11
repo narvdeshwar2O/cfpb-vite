@@ -4,9 +4,11 @@ import { FilterBar } from "@/layouts";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useFilters } from "@/app/providers/filter-provider";
 import { useUserWiseStatus } from "@/features/user-wise/hooks/use-user-wise";
+import { useStateScope } from "@/hooks/useStateScope";
 
 export function UserWisePage() {
   const { getFilterArray, getFilterString, setFilter } = useFilters();
+  const { isScoped } = useStateScope();
   
   const selectedState = getFilterArray("state");
   const selectedDistrict = getFilterArray("district");
@@ -22,7 +24,7 @@ export function UserWisePage() {
     endDate
   );
 
-  const isStateSelected = selectedState.length === 1 && selectedState[0] !== "all";
+  const isStateSelected = isScoped || (selectedState.length === 1 && selectedState[0] !== "all");
   const isDistrictSelected = selectedDistrict.length === 1 && selectedDistrict[0] !== "all";
   const isPSSelected = selectedPS.length === 1 && selectedPS[0] !== "all";
 
@@ -72,6 +74,10 @@ export function UserWisePage() {
               return <span className="font-medium text-slate-700 uppercase">{val as string}</span>;
             }
             
+            if (locationKey === "districts" && isScoped) {
+              return <span className="font-medium text-slate-700 uppercase">{val as string}</span>;
+            }
+            
             return (
               <span 
                 className="font-medium text-indigo-600 cursor-pointer hover:underline uppercase"
@@ -93,7 +99,7 @@ export function UserWisePage() {
       };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }).filter(Boolean) as ColumnDef<any>[];
-  }, [isStateSelected, isDistrictSelected, isPSSelected, setFilter]);
+  }, [isStateSelected, isDistrictSelected, isPSSelected, setFilter, isScoped]);
 
   const tableData = useMemo(() => {
     if (!userWiseResponse?.data) return [];

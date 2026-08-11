@@ -6,12 +6,15 @@ import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import type { WorkflowStatusItem } from "@/features/workflow/types/workflow.types";
 import { ROUTES } from "@/shared/constants/routes";
 import { useMemo } from "react";
+import { useStateScope } from "@/hooks/useStateScope";
 
 export function WorkflowPage() {
   const location = useLocation();
   const type = location.pathname === ROUTES.workflowSlip ? "slip-capture" : "live-enrollment";
 
   const { getFilterArray, getFilterString, setFilter } = useFilters();
+  const { isScoped } = useStateScope();
+  
   const stateParam = getFilterArray("state");
   const districtParam = getFilterArray("district");
   const startDate = getFilterString("start_date") || undefined;
@@ -28,16 +31,13 @@ export function WorkflowPage() {
   const tableData = data?.data || [];
 
   const columns = useMemo<ColumnDef<WorkflowStatusItem>[]>(() => {
-    const isStateSelected = stateParam.length > 0 && !stateParam.includes("all");
-    const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
+    const isStateSelected = isScoped || (stateParam.length > 0 && !stateParam.includes("all"));
+    // const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
     
     let locationKey: "state" | "district" | "police_station" = "state";
     let locationLabel = "State/UTs/CLEAs";
     
-    if (isDistrictSelected) {
-      locationKey = "police_station";
-      locationLabel = "Police Station";
-    } else if (isStateSelected) {
+    if (isStateSelected) {
       locationKey = "district";
       locationLabel = "District Name";
     }
@@ -69,14 +69,8 @@ export function WorkflowPage() {
               </span>
             );
           } else if (locationKey === "district") {
-            return (
-              <span 
-                className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"
-                onClick={() => setFilter("district", [val])}
-              >
-                {val}
-              </span>
-            );
+            // Police station data not available for this route, so stop drilldown here
+            return <span className="font-medium text-slate-700 uppercase">{val}</span>;
           }
           
           return <span className="font-medium text-slate-700 uppercase">{val}</span>;
@@ -91,7 +85,7 @@ export function WorkflowPage() {
       { key: "deadbody", label: "Deadbody", render: (row) => row.deadbody?.toLocaleString() || 0 },
       { key: "UIFP", label: "UIFP", headerClassName: "text-center align-middle", cellClassName: "text-center align-middle", render: (row) => row.UIFP?.toLocaleString() || 0 },
     ];
-  }, [stateParam, districtParam, setFilter]);
+  }, [stateParam, setFilter, isScoped]);
 
   return (
     <div className="flex flex-col h-full">

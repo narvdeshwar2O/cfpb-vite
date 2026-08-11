@@ -4,9 +4,12 @@ import { useChancePrintStatus } from "@/features/chance-print/hooks/use-chance-p
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import type { ChancePrintStatusItem } from "@/features/chance-print/types/chance-print.types";
 import { useMemo } from "react";
+import { useStateScope } from "@/hooks/useStateScope";
 
 export function ChancePrintPage() {
   const { getFilterArray, getFilterString, setFilter } = useFilters();
+  const { isScoped } = useStateScope();
+  
   const stateParam = getFilterArray("state");
   const districtParam = getFilterArray("district");
   const startDate = getFilterString("start_date") || undefined;
@@ -22,7 +25,7 @@ export function ChancePrintPage() {
   const tableData = data?.data || [];
 
   const columns = useMemo<ColumnDef<ChancePrintStatusItem>[]>(() => {
-    const isStateSelected = stateParam.length > 0 && !stateParam.includes("all");
+    const isStateSelected = isScoped || (stateParam.length > 0 && !stateParam.includes("all"));
     const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
     
     let locationKey: "state" | "district" | "police_station" = "state";
@@ -63,6 +66,9 @@ export function ChancePrintPage() {
               </span>
             );
           } else if (locationKey === "district") {
+            if (isScoped) {
+              return <span className="font-medium text-slate-700 uppercase">{val}</span>;
+            }
             return (
               <span 
                 className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"
@@ -81,7 +87,7 @@ export function ChancePrintPage() {
       { key: "hit", label: "Total Hit", render: (row) => row.hit?.toLocaleString() || 0 },
       { key: "nohit", label: "Total No-Hit", headerClassName: "text-center align-middle", cellClassName: "text-center align-middle", render: (row) => row.nohit?.toLocaleString() || 0 },
     ];
-  }, [stateParam, districtParam, setFilter]);
+  }, [stateParam, districtParam, setFilter, isScoped]);
 
   return (
     <div className="flex flex-col h-full">

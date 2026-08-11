@@ -4,9 +4,12 @@ import { useTenPrintStatus } from "@/features/ten-print/hooks/use-ten-print";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import type { TenPrintStatusItem } from "@/features/ten-print/types/ten-print.types";
 import { useMemo } from "react";
+import { useStateScope } from "@/hooks/useStateScope";
 
 export function TenPrintPage() {
   const { getFilterArray, getFilterString, setFilter } = useFilters();
+  const { isScoped } = useStateScope();
+  
   const stateParam = getFilterArray("state");
   const districtParam = getFilterArray("district");
   const startDate = getFilterString("start_date") || undefined;
@@ -22,7 +25,7 @@ export function TenPrintPage() {
   const tableData = data?.data || [];
 
   const columns = useMemo<ColumnDef<TenPrintStatusItem>[]>(() => {
-    const isStateSelected = stateParam.length > 0 && !stateParam.includes("all");
+    const isStateSelected = isScoped || (stateParam.length > 0 && !stateParam.includes("all"));
     const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
     
     let locationKey: "state" | "district" | "police_station" = "state";
@@ -63,6 +66,9 @@ export function TenPrintPage() {
               </span>
             );
           } else if (locationKey === "district") {
+            if (isScoped) {
+              return <span className="font-medium text-slate-700 uppercase">{val}</span>;
+            }
             return (
               <span 
                 className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"
@@ -83,7 +89,7 @@ export function TenPrintPage() {
       { key: "cp_verified", label: "Total CP verified", cellClassName: "text-center align-middle border-r border-slate-200", render: (row) => row.cp_verified?.toLocaleString() || 0 },
       { key: "cp_delete", label: "Total CP Deleted", headerClassName: "text-center align-middle", cellClassName: "text-center align-middle", render: (row) => row.cp_delete?.toLocaleString() || 0 },
     ];
-  }, [stateParam, districtParam, setFilter]);
+  }, [stateParam, districtParam, setFilter, isScoped]);
 
   return (
     <div className="flex flex-col h-full">
