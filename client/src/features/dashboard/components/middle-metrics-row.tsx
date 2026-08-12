@@ -30,7 +30,7 @@ export function MiddleMetricsRow() {
   return (
     <div className="grid grid-cols-4 gap-3">
       {/* 1. Total Active Users - NEUTRAL (Dummy for now) */}
-      <StatCard label="Total Active Users" value="3,850" className="h-22.5" />
+      <StatCard label="Total Nafis Users" value="3,850" className="h-22.5" />
 
       {/* 2. Slip Capture (Ten Print) - BLUE */}
       <SplitStatCard

@@ -66,9 +66,6 @@ export function ChancePrintPage() {
               </span>
             );
           } else if (locationKey === "district") {
-            if (isScoped) {
-              return <span className="font-medium text-slate-700 uppercase">{val}</span>;
-            }
             return (
               <span 
                 className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"

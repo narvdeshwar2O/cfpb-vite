@@ -25,21 +25,13 @@ export function UserWisePage() {
   );
 
   const isStateSelected = isScoped || (selectedState.length === 1 && selectedState[0] !== "all");
-  const isDistrictSelected = selectedDistrict.length === 1 && selectedDistrict[0] !== "all";
-  const isPSSelected = selectedPS.length === 1 && selectedPS[0] !== "all";
 
   const columns = useMemo(() => {
-    // Determine the dynamic column: State vs District vs Police Station
+    // Determine the dynamic column: State vs District
     let locationLabel = "State/UTs/CLEAs";
     let locationKey = "state";
 
-    if (isPSSelected) {
-      locationLabel = "Police Station";
-      locationKey = "policeStation";
-    } else if (isDistrictSelected) {
-      locationLabel = "Police Station";
-      locationKey = "policeStation";
-    } else if (isStateSelected) {
+    if (isStateSelected) {
       locationLabel = "District Name";
       locationKey = "districts";
     }
@@ -69,29 +61,19 @@ export function UserWisePage() {
           const val = row[key];
           
           if (key === locationKey && val) {
-            // Do not make Police Station clickable since it's the lowest level of drill down
-            if (locationKey === "policeStation") {
+            if (locationKey === "state") {
+              return (
+                <span 
+                  className="font-medium text-indigo-600 cursor-pointer hover:underline uppercase"
+                  onClick={() => setFilter("state", [val as string])}
+                >
+                  {val as string}
+                </span>
+              );
+            } else if (locationKey === "districts") {
+              // Police station data not available for this route, so stop drilldown here
               return <span className="font-medium text-slate-700 uppercase">{val as string}</span>;
             }
-            
-            if (locationKey === "districts" && isScoped) {
-              return <span className="font-medium text-slate-700 uppercase">{val as string}</span>;
-            }
-            
-            return (
-              <span 
-                className="font-medium text-indigo-600 cursor-pointer hover:underline uppercase"
-                onClick={() => {
-                  if (!isStateSelected) {
-                    setFilter("state", [val as string]);
-                  } else if (!isDistrictSelected) {
-                    setFilter("district", [val as string]);
-                  }
-                }}
-              >
-                {val as string}
-              </span>
-            );
           }
           
           return typeof val === 'string' ? val.toUpperCase() : (val as string);
@@ -99,7 +81,7 @@ export function UserWisePage() {
       };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }).filter(Boolean) as ColumnDef<any>[];
-  }, [isStateSelected, isDistrictSelected, isPSSelected, setFilter, isScoped]);
+  }, [isStateSelected, setFilter]);
 
   const tableData = useMemo(() => {
     if (!userWiseResponse?.data) return [];
