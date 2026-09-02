@@ -92,10 +92,13 @@ export function LoginForm() {
             )}
           </Button>
 
-          <div className="text-center flex flex-col gap-2 text-xs font-medium text-slate-500 bg-slate-50 p-4 rounded-xl w-full border border-slate-100">
+          <div className="text-center flex flex-col items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 p-4 rounded-xl w-full border border-slate-100">
             <p className="text-slate-700">National Crime Records Bureau</p>
             <p>Ministry of Home Affairs, New Delhi</p>
-            <p className="mt-2 text-indigo-600 cursor-pointer hover:underline">Contact Administrator for Access</p>
+            <p className="mt-1 text-indigo-600 cursor-pointer hover:underline mb-2">Contact Administrator for Access</p>
+            <div className="w-full h-px bg-slate-200 my-1"></div>
+            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Developed by</p>
+            <img src="/opsvision.webp" alt="Opsvision Logo" className="w-64 h-auto object-contain rounded transition-all" />
           </div>
         </CardFooter>
       </form>
