@@ -10,8 +10,24 @@ export const Header = React.memo(function Header() {
 
   const { user, isSuperAdmin, logout } = useAuth();
 
-  const currentLink = NAV_LINKS.find(link => link.href === pathname);
-  const title = currentLink ? currentLink.label : "NAFIS Dashboard";
+  let title = "NAFIS Dashboard";
+  let currentIcon = null;
+
+  for (const link of NAV_LINKS) {
+    if (link.href === pathname) {
+      title = link.label;
+      currentIcon = link.icon;
+      break;
+    }
+    if (link.children) {
+      const child = link.children.find((c: { href: string; label: string }) => c.href === pathname);
+      if (child) {
+        title = child.label;
+        currentIcon = link.icon; // Use parent icon for children
+        break;
+      }
+    }
+  }
 
   const handleLogout = () => {
     logout();
@@ -23,9 +39,9 @@ export const Header = React.memo(function Header() {
   const initials = displayName.substring(0, 2).toUpperCase();
 
   return (
-    <header className="flex h-18.25 shrink-0 items-center justify-between bg-white border-b border-slate-200 px-6 sticky top-0 z-20">
+    <header className="flex h-18.25 shrink-0 items-center justify-between bg-white border-b border-slate-200 px-6 sticky top-0 z-20 print:hidden">
       <div className="flex items-center gap-3">
-        {currentLink && <currentLink.icon className="w-6 h-6 text-indigo-600" />}
+        {currentIcon && React.createElement(currentIcon, { className: "w-6 h-6 text-indigo-600" })}
         <h1 className="text-xl font-bold text-slate-800 tracking-tight">
           {title}
         </h1>

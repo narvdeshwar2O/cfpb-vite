@@ -4,6 +4,7 @@ interface FilterState {
   state: string[];
   district: string[];
   police_station: string[];
+  country: string[];
   start_date: string;
   end_date: string;
 }
@@ -19,6 +20,7 @@ const defaultState: FilterState = {
   state: ["all"],
   district: ["all"],
   police_station: ["all"],
+  country: ["all"],
   start_date: "",
   end_date: "",
 };

@@ -54,8 +54,36 @@ export const NAV_LINKS = [
     icon: Map,
     preload: () => import("@/pages/InterstatePage")
   },
-  // { label: "Overall NAFIS Status", href: "/overall-nafis", icon: BarChart },
-  // { label: "FPI Status", href: "/fpi", icon: ShieldCheck },
+  {
+    label: "FPI Status",
+    icon: ShieldCheck,
+    children: [
+      { label: "Human Body Offences", href: ROUTES.fpiHumanBody, preload: () => import("@/features/fpi-status/pages/human-body-offences-page") },
+      {
+        label: "Property & Document Offences",
+        href: ROUTES.fpiProperty,
+        preload: () => import("@/features/fpi-status/pages/property-offences-page"),
+      },
+      { label: "All Crimes", href: ROUTES.fpiSll, preload: () => import("@/features/fpi-status/pages/sll-crimes-page") },
+      { label: "Ten Prints Enrolled", href: ROUTES.fpiTenPrint, preload: () => import("@/features/fpi-status/pages/ten-prints-enrolled-page") },
+      { label: "Foreigners TP Enrolled", href: ROUTES.fpiForeigners, preload: () => import("@/features/fpi-status/pages/foreigners-tp-page") },
+      {
+        label: "Latent Cases",
+        href: ROUTES.fpiLatent,
+        preload: () => import("@/features/fpi-status/pages/latent-cases-page")
+      },
+      {
+        label: "Chance Print",
+        href: ROUTES.fpiChancePrint,
+        preload: () => import("@/features/fpi-status/pages/chance-print-page")
+      },
+      {
+        label: "LVQ vs RVQ",
+        href: ROUTES.fpiExpertOpinion,
+        preload: () => import("@/features/fpi-status/pages/expert-opinion-page")
+      }
+    ]
+  },
 ];
 
 export const ADMIN_NAV_LINKS = [

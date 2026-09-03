@@ -1,22 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NAV_LINKS, ADMIN_NAV_LINKS } from "@/constants/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { SidebarItem } from "./components/sidebar-item";
+import { SidebarAdmin } from "./components/sidebar-admin";
 
 export const Sidebar = React.memo(function Sidebar() {
   const { pathname } = useLocation();
   const { isSuperAdmin } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   return (
     <aside
       className={cn(
-        "h-full shrink-0 border-r border-slate-300 bg-card flex flex-col p-3 shadow-xl shadow-slate-900/10 z-10 transition-all duration-300 relative",
-        isCollapsed ? "w-20" : "w-72",
+        "h-full shrink-0 border-r border-slate-300 bg-card flex flex-col p-3 shadow-xl shadow-slate-900/10 z-10 transition-all duration-300 relative print:hidden",
+        isCollapsed ? "w-20" : "w-72"
       )}
     >
       <button
@@ -38,9 +41,7 @@ export const Sidebar = React.memo(function Sidebar() {
         </div>
         {!isCollapsed && (
           <>
-            <h2 className="text-indigo-600 font-bold tracking-wider text-[28px]">
-              NAFIS
-            </h2>
+            <h2 className="text-indigo-600 font-bold tracking-wider text-[28px]">NAFIS</h2>
             <p className="text-indigo-500 text-md font-bold uppercase tracking-widest whitespace-nowrap">
               Dashboard
             </p>
@@ -49,84 +50,30 @@ export const Sidebar = React.memo(function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto pr-2 overflow-x-hidden">
-        {NAV_LINKS.map((link) => {
-          const isActive = pathname === link.href;
-          const Icon = link.icon;
-
-          return (
-            <Link
-              key={link.href}
-              to={link.href}
-              onMouseEnter={() => link.preload?.()}
-              title={isCollapsed ? link.label : undefined}
-              className={cn(
-                "w-full flex items-center py-3 rounded-xl font-semibold transition-all duration-200 group",
-                isCollapsed ? "justify-center px-0" : "gap-3 px-4 text-[18px]",
-                isActive
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/20"
-                  : "text-black hover:bg-indigo-600 hover:text-white",
-              )}
-            >
-              <Icon
-                className={cn(
-                  "w-6 h-6 transition-transform duration-200 shrink-0",
-                  isActive
-                    ? "text-white"
-                    : "text-black group-hover:text-white group-hover:scale-110",
-                )}
-              />
-              {!isCollapsed && <span className="truncate">{link.label}</span>}
-            </Link>
-          );
-        })}
+        {NAV_LINKS.map((link) => (
+          <SidebarItem
+            key={link.label}
+            link={link}
+            pathname={pathname}
+            isCollapsed={isCollapsed}
+            setIsCollapsed={setIsCollapsed}
+            expandedMenus={expandedMenus}
+            setExpandedMenus={setExpandedMenus}
+          />
+        ))}
 
         {isSuperAdmin && (
-          <div className="mt-4 flex flex-col gap-1.5">
-            {!isCollapsed && (
-              <h3 className="px-4 mb-2 text-sm font-semibold tracking-wide text-slate-500">
-                Administration
-              </h3>
-            )}
-            {/* Divider for collapsed state so icons don't bleed into main nav visually */}
-            {isCollapsed && <div className="h-px w-8 bg-slate-200 mx-auto my-2"></div>}
-            
-            {ADMIN_NAV_LINKS.map((link) => {
-              const isActive = pathname === link.href;
-              const Icon = link.icon;
-
-              return (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onMouseEnter={() => link.preload?.()}
-                  title={isCollapsed ? link.label : undefined}
-                  className={cn(
-                    "w-full flex items-center py-3 rounded-xl font-semibold transition-all duration-200 group",
-                    isCollapsed ? "justify-center px-0" : "gap-3 px-4 text-[18px]",
-                    isActive
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/20"
-                      : "text-black hover:bg-indigo-600 hover:text-white",
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "w-6 h-6 transition-transform duration-200 shrink-0",
-                      isActive
-                        ? "text-white"
-                        : "text-black group-hover:text-white group-hover:scale-110",
-                    )}
-                  />
-                  {!isCollapsed && <span className="truncate">{link.label}</span>}
-                </Link>
-              );
-            })}
-          </div>
+          <SidebarAdmin
+            pathname={pathname}
+            isCollapsed={isCollapsed}
+            adminLinks={ADMIN_NAV_LINKS}
+          />
         )}
       </nav>
 
       {/* Developed By Footer */}
       <div className={cn("mt-auto pt-4 flex flex-col items-center justify-center shrink-0 border-t border-slate-200", isCollapsed ? "px-1" : "px-4")}>
-        {!isCollapsed && <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Developed by</span>}
+        {/* {!isCollapsed && <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Developed by</span>} */}
         <img
           src="/opsvision.webp"
           alt="Opsvision Logo"

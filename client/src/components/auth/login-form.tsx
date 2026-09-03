@@ -21,7 +21,7 @@ export function LoginForm() {
     setError("")
 
     const success = await login(email, password)
-    
+
     if (success) {
       navigate("/")
     } else {
@@ -68,9 +68,9 @@ export function LoginForm() {
             />
           </div>
 
-          <div className="flex justify-end mt-1">
+          {/* <div className="flex justify-end mt-1">
              <a href="#" className="text-sm text-indigo-600 font-medium hover:text-indigo-700">Forgot Password?</a>
-          </div>
+          </div> */}
 
           {error && (
             <div className="text-sm text-red-500 font-medium text-center bg-red-50 p-2 rounded-lg border border-red-100">
@@ -97,7 +97,7 @@ export function LoginForm() {
             <p>Ministry of Home Affairs, New Delhi</p>
             <p className="mt-1 text-indigo-600 cursor-pointer hover:underline mb-2">Contact Administrator for Access</p>
             <div className="w-full h-px bg-slate-200 my-1"></div>
-            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Developed by</p>
+            {/* <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Developed by</p> */}
             <img src="/opsvision.webp" alt="Opsvision Logo" className="w-64 h-auto object-contain rounded transition-all" />
           </div>
         </CardFooter>

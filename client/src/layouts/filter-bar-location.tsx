@@ -3,10 +3,11 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { useFilters } from "@/app/providers/filter-provider";
 import { useFilterOptions } from "./use-filter-options";
 import { useStateScope } from "@/hooks/useStateScope";
-// import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export function FilterBarLocation() {
-  // const { pathname } = useLocation();
+  const { pathname } = useLocation();
+  const isFpiRoute = pathname.startsWith("/fpi");
   const { isScoped, scopedState } = useStateScope();
   const { getFilterArray, setFilter } = useFilters();
 
@@ -34,9 +35,25 @@ export function FilterBarLocation() {
   };
   */
 
+  const isForeignersRoute = pathname === "/fpi/foreigners";
+
+  const dummyCountries = [
+    { label: "All Selected", value: "all" },
+    ...[
+      "Afghanistan", "Bangladesh", "Bhutan", "Brazil", "Canada",
+      "China", "Egypt", "France", "Germany", "India",
+      "Indonesia", "Italy", "Japan", "Malaysia", "Myanmar",
+      "Nepal", "Pakistan", "Russia", "Sri Lanka", "United States"
+    ].map(c => ({ label: c, value: c.toLowerCase() }))
+  ];
+
+  const handleCountryChange = (val: string[]) => {
+    setFilter("country", val.length === 0 ? [] : val);
+  };
+
   return (
     <div className="flex items-center gap-3 shrink-0 z-50">
-        {!isScoped && (
+        {!isScoped && !isForeignersRoute && (
           <div className="flex items-center gap-2">
             <label className="text-slate-600 font-medium text-sm">State</label>
             <div className="w-64">
@@ -49,6 +66,20 @@ export function FilterBarLocation() {
             </div>
           </div>
         )}
+        {isForeignersRoute && (
+          <div className="flex items-center gap-2">
+            <label className="text-slate-600 font-medium text-sm">Country</label>
+            <div className="w-64">
+              <MultiSelect
+                options={dummyCountries}
+                value={getFilterArray("country")}
+                onChange={handleCountryChange}
+                placeholder="Select Country..."
+              />
+            </div>
+          </div>
+        )}
+      {!isFpiRoute && (
         <div className="flex items-center gap-2">
           <label className="text-slate-600 font-medium text-sm">District</label>
           <div className="w-64">
@@ -60,6 +91,7 @@ export function FilterBarLocation() {
             />
           </div>
         </div>
+      )}
         {/* <div className="flex items-center gap-2">
           <label className="text-slate-600 font-medium text-sm">Station</label>
           <div className="w-64">

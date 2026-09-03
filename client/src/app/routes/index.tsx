@@ -13,6 +13,7 @@ import { tenPrintRoutes } from "@/features/ten-print/ten-print.routes";
 import { chancePrintRoutes } from "@/features/chance-print/chance-print.routes";
 import { interstateRoutes } from "@/features/interstate/interstate.routes";
 import { userWiseRoutes } from "@/features/user-wise/user-wise.routes";
+import { fpiStatusRoutes } from "@/features/fpi-status/fpi-status.routes";
 
 const router = createBrowserRouter([
   {
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
       ...chancePrintRoutes,
       ...userWiseRoutes,
       ...workflowRoutes,
+      ...fpiStatusRoutes,
       ...adminRoutes,
       {
         path: "*",
