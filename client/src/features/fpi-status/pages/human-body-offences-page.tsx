@@ -13,11 +13,10 @@ export default function HumanBodyOffencesPage() {
     queryKey: ["fpi-human-body", filters.state, filters.start_date, filters.end_date],
     queryFn: async () => {
       const payload = {
-          state: filters.state.includes("all") ? [] : filters.state,
-          start_date: filters.start_date,
-          end_date: filters.end_date
+        state: filters.state.includes("all") ? [] : filters.state,
+        start_date: filters.start_date,
+        end_date: filters.end_date
       };
-      
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://10.1.21.143:3000'}/fpi/human`, {
         method: "POST",
         headers: {

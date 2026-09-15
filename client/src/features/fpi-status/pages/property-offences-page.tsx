@@ -8,16 +8,16 @@ import { useFilters } from "@/app/providers/filter-provider";
 
 export default function PropertyOffencesPage() {
   const { filters } = useFilters();
-  
+
   const { data: responseData, isLoading, isError } = useQuery({
     queryKey: ["fpi-property", filters.state, filters.start_date, filters.end_date],
     queryFn: async () => {
       const payload = {
-          state: filters.state.includes("all") ? [] : filters.state,
-          start_date: filters.start_date,
-          end_date: filters.end_date
+        state: filters.state.includes("all") ? [] : filters.state,
+        start_date: filters.start_date,
+        end_date: filters.end_date
       };
-      
+
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://10.1.21.143:3000'}/fpi/human`, {
         method: "POST",
         headers: {
@@ -25,7 +25,7 @@ export default function PropertyOffencesPage() {
         },
         body: JSON.stringify(payload)
       });
-      
+
       if (!res.ok) throw new Error("Failed to fetch property offences data");
       return res.json();
     }
@@ -37,15 +37,15 @@ export default function PropertyOffencesPage() {
     const locationLabel = "State/UTs/CLEAs";
 
     return [
-      { 
-        key: "id", 
-        label: "Sl. No", 
+      {
+        key: "id",
+        label: "Sl. No",
         headerClassName: "text-center align-middle w-20 border-r border-slate-200",
         cellClassName: "text-center align-middle font-medium text-slate-700 border-r border-slate-200",
-        render: (_, idx) => idx + 1 
+        render: (_, idx) => idx + 1
       },
-      { 
-        key: locationKey, 
+      {
+        key: locationKey,
         label: locationLabel,
         headerClassName: "text-center align-middle border-r border-slate-200 min-w-32",
         cellClassName: "text-center align-middle border-r border-slate-200 min-w-32",
@@ -84,11 +84,11 @@ export default function PropertyOffencesPage() {
     <div className="flex flex-col h-full">
       <FilterBar />
       <div className="flex-1 overflow-auto">
-        <DataTable 
-          columns={columns} 
-          data={tableData} 
-          isLoading={isLoading} 
-          isError={isError} 
+        <DataTable
+          columns={columns}
+          data={tableData}
+          isLoading={isLoading}
+          isError={isError}
           headerGroups={headerGroups}
           showTotals={true}
         />

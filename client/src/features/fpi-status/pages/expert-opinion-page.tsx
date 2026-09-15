@@ -2,13 +2,35 @@ import { FilterBar } from "@/layouts";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useMemo } from "react";
 
+import { useQuery } from "@tanstack/react-query";
+import { useFilters } from "@/app/providers/filter-provider";
+
 export default function ExpertOpinionPage() {
-  // Dummy data for now
-  const tableData = [
-    { state: "Delhi", district: "New Delhi", suplvq: 0, suprvq: 0 }
-  ];
-  const isLoading = false;
-  const isError = false;
+  const { filters } = useFilters();
+
+  const { data: responseData, isLoading, isError } = useQuery({
+    queryKey: ["fpi-expert-opinion", filters.state, filters.start_date, filters.end_date],
+    queryFn: async () => {
+      const payload = {
+        state: filters.state.includes("all") ? [] : filters.state,
+        start_date: filters.start_date,
+        end_date: filters.end_date
+      };
+      
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://10.1.21.143:3000'}/fpi/lvq-rvq`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) throw new Error("Failed to fetch expert opinion data");
+      return res.json();
+    }
+  });
+
+  const tableData = responseData?.data || [];
   const columns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
     const locationKey = "state";
     const locationLabel = "State/UTs/CLEAs";
@@ -33,8 +55,8 @@ export default function ExpertOpinionPage() {
         }
       },
       ...[
-      { key: "suplvq", label: "SUPLVQ" },
-      { key: "suprvq", label: "SUPRVQ" }
+      { key: "sup_lv", label: "SUPLVQ" },
+      { key: "sup_rv", label: "SUPRVQ" }
       ].map(col => ({
         key: col.key,
         label: col.label,
@@ -63,6 +85,7 @@ export default function ExpertOpinionPage() {
           isLoading={isLoading}
           isError={isError}
           headerGroups={headerGroups}
+          showTotals={true}
         />
       </div>
     </div>
