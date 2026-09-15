@@ -3,12 +3,35 @@ import { FilterBar } from "@/layouts";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useMemo } from "react";
 
-export default function PropertyOffencesPage() {  // Dummy data for now
-  const tableData = [
-    { state: "Delhi", district: "New Delhi" }
-  ];
-  const isLoading = false;
-  const isError = false;
+import { useQuery } from "@tanstack/react-query";
+import { useFilters } from "@/app/providers/filter-provider";
+
+export default function PropertyOffencesPage() {
+  const { filters } = useFilters();
+  
+  const { data: responseData, isLoading, isError } = useQuery({
+    queryKey: ["fpi-property", filters.state, filters.start_date, filters.end_date],
+    queryFn: async () => {
+      const payload = {
+          state: filters.state.includes("all") ? [] : filters.state,
+          start_date: filters.start_date,
+          end_date: filters.end_date
+      };
+      
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://10.1.21.143:3000'}/fpi/human`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) throw new Error("Failed to fetch property offences data");
+      return res.json();
+    }
+  });
+
+  const tableData = responseData?.data || [];
   const columns = useMemo<ColumnDef<any>[]>(() => {
     const locationKey = "state";
     const locationLabel = "State/UTs/CLEAs";
@@ -67,6 +90,7 @@ export default function PropertyOffencesPage() {  // Dummy data for now
           isLoading={isLoading} 
           isError={isError} 
           headerGroups={headerGroups}
+          showTotals={true}
         />
       </div>
     </div>

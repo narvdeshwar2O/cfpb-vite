@@ -3,12 +3,35 @@ import { FilterBar } from "@/layouts";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import { useMemo } from "react";
 
-export default function HumanBodyOffencesPage() {  // Dummy data for now
-  const tableData = [
-    { state: "Delhi", district: "New Delhi" }
-  ];
-  const isLoading = false;
-  const isError = false;
+import { useQuery } from "@tanstack/react-query";
+import { useFilters } from "@/app/providers/filter-provider";
+
+export default function HumanBodyOffencesPage() {
+  const { filters } = useFilters();
+  
+  const { data: responseData, isLoading, isError } = useQuery({
+    queryKey: ["fpi-human-body", filters.state, filters.start_date, filters.end_date],
+    queryFn: async () => {
+      const payload = {
+          state: filters.state.includes("all") ? [] : filters.state,
+          start_date: filters.start_date,
+          end_date: filters.end_date
+      };
+      
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://10.1.21.143:3000'}/fpi/human`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) throw new Error("Failed to fetch human body offences data");
+      return res.json();
+    }
+  });
+
+  const tableData = responseData?.data || [];
   const columns = useMemo<ColumnDef<any>[]>(() => {
     const locationKey = "state";
     const locationLabel = "State/UTs/CLEAs";
@@ -34,16 +57,16 @@ export default function HumanBodyOffencesPage() {  // Dummy data for now
       },
       ...[
         { key: "murder", label: "Murder Sec. 302 IPC/ 103 (1) & (2) BNS" },
-        { key: "culpable", label: "Culpable Homicide Sec. 304 IPC/ 105 BNS" },
-        { key: "negligence", label: "Causing death by Negligence Sec 304-A IPC/ 106 BNS" },
-        { key: "dowry", label: "Dowry Deaths Sec 304B IPC/ 80 BNS" },
-        { key: "suicide", label: "Abetment of suicide Sec 305, 306 IPC/ 107, 108 BNS" },
-        { key: "attempt", label: "Attempt to Murder & Culpable homicide Sec 307 &Sec 308 IPC/ 109, 110 BNS" },
-        { key: "hurt", label: "Grievous Hurt Sec 324, 325,326, 332, 333 & 353 IPC/ 117 (2,3,4), 118 (1,2), 121(1,2) r/w, 132 BNS" },
-        { key: "acid", label: "Acid attack Sec 326A,326B IPC/ 124 (1&2) BNS" },
-        { key: "assault", label: "Assault on Women Sec 354, 354 A,B,C,D IPC/ 74, 75, 76, 77, 78 BNS" },
+        { key: "culpable_homicide", label: "Culpable Homicide Sec. 304 IPC/ 105 BNS" },
+        { key: "death_negligence", label: "Causing death by Negligence Sec 304-A IPC/ 106 BNS" },
+        { key: "dowry_death", label: "Dowry Deaths Sec 304B IPC/ 80 BNS" },
+        { key: "abedment_suicide", label: "Abetment of suicide Sec 305, 306 IPC/ 107, 108 BNS" },
+        { key: "attempt_murder", label: "Attempt to Murder & Culpable homicide Sec 307 &Sec 308 IPC/ 109, 110 BNS" },
+        { key: "griveous_hurt", label: "Grievous Hurt Sec 324, 325,326, 332, 333 & 353 IPC/ 117 (2,3,4), 118 (1,2), 121(1,2) r/w, 132 BNS" },
+        { key: "acid_attack", label: "Acid attack Sec 326A,326B IPC/ 124 (1&2) BNS" },
+        { key: "assault_women", label: "Assault on Women Sec 354, 354 A,B,C,D IPC/ 74, 75, 76, 77, 78 BNS" },
         { key: "kidnapping", label: "Kidnapping & Abduction Sec 363, 363A, 364, 364A, 365, 366 A,B & 367, 368 IPC/ 137 To 140 (1,2,3,4), 141, 142 BNS" },
-        { key: "trafficking", label: "Human trafficking Sec 370, 370A, 372, 373 IPC/ 98, 99 BNS" },
+        { key: "human_trafficking", label: "Human trafficking Sec 370, 370A, 372, 373 IPC/ 98, 99 BNS" },
         { key: "rape", label: "Rape Sec 376 IPC/ 64, 65, 66, 67, 68, 69, 70, 71 r/w, 72(1) BNS" }
       ].map(col => ({
         key: col.key,
@@ -71,6 +94,7 @@ export default function HumanBodyOffencesPage() {  // Dummy data for now
           isLoading={isLoading} 
           isError={isError} 
           headerGroups={headerGroups}
+          showTotals={true}
         />
       </div>
     </div>

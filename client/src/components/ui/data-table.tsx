@@ -6,6 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table";
 
 export interface ColumnDef<T> {
@@ -30,6 +31,7 @@ interface DataTableProps<T> {
   isError?: boolean;
   emptyMessage?: string;
   headerGroups?: HeaderGroup[][] | HeaderGroup[];
+  showTotals?: boolean;
 }
 
 export function DataTable<T>({
@@ -39,6 +41,7 @@ export function DataTable<T>({
   isError,
   emptyMessage = "No records found",
   headerGroups,
+  showTotals = false,
 }: DataTableProps<T>) {
   const colIndexToSkip = new Set<number>();
   const normalizedHeaderGroups: HeaderGroup[][] = headerGroups 
@@ -162,6 +165,35 @@ export function DataTable<T>({
             ))
           )}
         </TableBody>
+        {showTotals && data && data.length > 0 && (
+          <TableFooter>
+            <TableRow>
+              {columns.map((col, colIndex) => {
+                let cellValue: ReactNode;
+                if (colIndex === 0) {
+                  cellValue = "Total";
+                } else if (colIndex === 1) {
+                  cellValue = "";
+                } else {
+                  // Sum the column
+                  const sum = data.reduce((acc, row) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    return acc + (Number((row as any)[col.key]) || 0);
+                  }, 0);
+                  cellValue = sum.toLocaleString();
+                }
+                return (
+                  <TableCell
+                    key={col.key || colIndex}
+                    className="text-center align-middle font-bold text-slate-800 border-r border-slate-200 bg-slate-100"
+                  >
+                    {cellValue}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          </TableFooter>
+        )}
       </Table>
     </div>
   );
