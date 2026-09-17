@@ -64,7 +64,7 @@ export const NAV_LINKS = [
         href: ROUTES.fpiProperty,
         preload: () => import("@/features/fpi-status/pages/property-offences-page"),
       },
-      { label: "All Crimes", href: ROUTES.fpiSll, preload: () => import("@/features/fpi-status/pages/sll-crimes-page") },
+      { label: "SLL Crimes", href: ROUTES.fpiSll, preload: () => import("@/features/fpi-status/pages/sll-crimes-page") },
       { label: "Ten Prints Enrolled", href: ROUTES.fpiTenPrint, preload: () => import("@/features/fpi-status/pages/ten-prints-enrolled-page") },
       { label: "Foreigners TP Enrolled", href: ROUTES.fpiForeigners, preload: () => import("@/features/fpi-status/pages/foreigners-tp-page") },
       {
