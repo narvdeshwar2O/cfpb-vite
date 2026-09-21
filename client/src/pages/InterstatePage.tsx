@@ -26,12 +26,15 @@ export function InterstatePage() {
 
   const columns = useMemo<ColumnDef<InterstateStatusItem>[]>(() => {
     const isStateSelected = isScoped || (stateParam.length > 0 && !stateParam.includes("all"));
-    // const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
+    const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
     
     let locationKey: "state" | "district" | "police_station" = "state";
     let locationLabel = "State/UTs/CLEAs";
     
-    if (isStateSelected) {
+    if (isDistrictSelected) {
+      locationKey = "police_station";
+      locationLabel = "Police Station";
+    } else if (isStateSelected) {
       locationKey = "district";
       locationLabel = "District Name";
     }
@@ -63,8 +66,14 @@ export function InterstatePage() {
               </span>
             );
           } else if (locationKey === "district") {
-            // Police station data not available for this route, so stop drilldown here
-            return <span className="font-medium text-slate-700 uppercase">{val}</span>;
+            return (
+              <span 
+                className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"
+                onClick={() => setFilter("district", [val])}
+              >
+                {val}
+              </span>
+            );
           }
           
           return <span className="font-medium text-slate-700 uppercase">{val}</span>;
@@ -75,7 +84,7 @@ export function InterstatePage() {
       { key: "lt_intra_hit", label: "Chance Print HIT (Intra State)", cellClassName: "text-center align-middle border-r border-slate-200", render: (row) => row.lt_intra_hit?.toLocaleString() || 0 },
       { key: "lt_inter_hit", label: "Chance Print HIT (Inter State)", headerClassName: "text-center align-middle", cellClassName: "text-center align-middle", render: (row) => row.lt_inter_hit?.toLocaleString() || 0 },
     ];
-  }, [stateParam, setFilter, isScoped]);
+  }, [stateParam, districtParam, setFilter, isScoped]);
 
   return (
     <div className="flex flex-col h-full">
@@ -85,6 +94,7 @@ export function InterstatePage() {
         data={tableData} 
         isLoading={isLoading} 
         isError={isError} 
+        showTotals={true}
       />
     </div>
   );

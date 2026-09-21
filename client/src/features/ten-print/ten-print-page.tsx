@@ -96,6 +96,7 @@ export function TenPrintPage() {
         data={tableData} 
         isLoading={isLoading} 
         isError={isError} 
+        showTotals={true}
       />
     </div>
   );

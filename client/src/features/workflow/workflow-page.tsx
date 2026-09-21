@@ -32,17 +32,20 @@ export function WorkflowPage() {
 
   const columns = useMemo<ColumnDef<WorkflowStatusItem>[]>(() => {
     const isStateSelected = isScoped || (stateParam.length > 0 && !stateParam.includes("all"));
-    // const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
+    const isDistrictSelected = districtParam.length > 0 && !districtParam.includes("all");
     
     let locationKey: "state" | "district" | "police_station" = "state";
     let locationLabel = "State/UTs/CLEAs";
     
-    if (isStateSelected) {
+    if (isDistrictSelected) {
+      locationKey = "police_station";
+      locationLabel = "Police Station";
+    } else if (isStateSelected) {
       locationKey = "district";
       locationLabel = "District Name";
     }
 
-    return [
+    const allCols: ColumnDef<WorkflowStatusItem>[] = [
       { 
         key: "id", 
         label: "Sl. No", 
@@ -63,17 +66,23 @@ export function WorkflowPage() {
             return (
               <span 
                 className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"
-                onClick={() => setFilter("state", [val])}
+                onClick={() => setFilter("state", [val as string])}
               >
-                {val}
+                {val as string}
               </span>
             );
           } else if (locationKey === "district") {
-            // Police station data not available for this route, so stop drilldown here
-            return <span className="font-medium text-slate-700 uppercase">{val}</span>;
+            return (
+              <span 
+                className="font-medium text-indigo-600 uppercase cursor-pointer hover:underline"
+                onClick={() => setFilter("district", [val as string])}
+              >
+                {val as string}
+              </span>
+            );
           }
           
-          return <span className="font-medium text-slate-700 uppercase">{val}</span>;
+          return <span className="font-medium text-slate-700 uppercase">{val as string}</span>;
         }
       },
       { key: "arrested", label: "Arrested", render: (row) => row.arrested?.toLocaleString() || 0 },
@@ -85,7 +94,13 @@ export function WorkflowPage() {
       { key: "deadbody", label: "Deadbody", render: (row) => row.deadbody?.toLocaleString() || 0 },
       { key: "UIFP", label: "UIFP", headerClassName: "text-center align-middle", cellClassName: "text-center align-middle", render: (row) => row.UIFP?.toLocaleString() || 0 },
     ];
-  }, [stateParam, setFilter, isScoped]);
+
+    return allCols.filter(col => {
+      if (col.key === "suspect") return false;
+      if (col.key === "deadbody") return type === "slip-capture";
+      return true;
+    });
+  }, [stateParam, districtParam, setFilter, isScoped, type]);
 
   return (
     <div className="flex flex-col h-full">
@@ -95,6 +110,7 @@ export function WorkflowPage() {
         data={tableData} 
         isLoading={isLoading} 
         isError={isError} 
+        showTotals={true}
       />
     </div>
   );

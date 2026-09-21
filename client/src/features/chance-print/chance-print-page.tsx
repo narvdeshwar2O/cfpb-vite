@@ -94,6 +94,7 @@ export function ChancePrintPage() {
         data={tableData} 
         isLoading={isLoading} 
         isError={isError} 
+        showTotals={true}
       />
     </div>
   );

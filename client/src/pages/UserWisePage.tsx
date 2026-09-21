@@ -24,14 +24,18 @@ export function UserWisePage() {
     endDate
   );
 
-  const isStateSelected = isScoped || (selectedState.length === 1 && selectedState[0] !== "all");
+  const isStateSelected = isScoped || (selectedState.length > 0 && !selectedState.includes("all"));
+  const isDistrictSelected = selectedDistrict.length > 0 && !selectedDistrict.includes("all");
 
   const columns = useMemo(() => {
-    // Determine the dynamic column: State vs District
+    // Determine the dynamic column: State vs District vs Police Station
     let locationLabel = "State/UTs/CLEAs";
     let locationKey = "state";
 
-    if (isStateSelected) {
+    if (isDistrictSelected) {
+      locationLabel = "Police Station";
+      locationKey = "policeStation";
+    } else if (isStateSelected) {
       locationLabel = "District Name";
       locationKey = "districts";
     }
@@ -71,8 +75,14 @@ export function UserWisePage() {
                 </span>
               );
             } else if (locationKey === "districts") {
-              // Police station data not available for this route, so stop drilldown here
-              return <span className="font-medium text-slate-700 uppercase">{val as string}</span>;
+              return (
+                <span 
+                  className="font-medium text-indigo-600 cursor-pointer hover:underline uppercase"
+                  onClick={() => setFilter("district", [val as string])}
+                >
+                  {val as string}
+                </span>
+              );
             }
           }
           
@@ -81,7 +91,7 @@ export function UserWisePage() {
       };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }).filter(Boolean) as ColumnDef<any>[];
-  }, [isStateSelected, setFilter]);
+  }, [isStateSelected, isDistrictSelected, setFilter]);
 
   const tableData = useMemo(() => {
     if (!userWiseResponse?.data) return [];
@@ -110,6 +120,7 @@ export function UserWisePage() {
           data={tableData} 
           isLoading={isLoading}
           isError={isError}
+          showTotals={true}
         />
       </div>
     </div>
