@@ -4,10 +4,10 @@ import React from "react";
 
 export function useTopMetrics() {
   const { getFilterArray, getFilterString } = useFilters();
-  
+
   const selectedStates = getFilterArray("state");
   const selectedDistricts = getFilterArray("district");
-  
+
   const startDate = getFilterString("start_date") || undefined;
   const endDate = getFilterString("end_date") || undefined;
 
@@ -37,7 +37,7 @@ export function useTopMetrics() {
 
   const metrics = [
     { label: "Total DB Size", value: totalDbSizeValue },
-    { label: "Total Digitization/Migration", value: getEnrollValue("migration") },
+    { label: "Total Digitization/Migration/ePrison/Inter-AFIS", value: getEnrollValue("migration") },
     { label: "Total Slip Capture", value: getEnrollValue("tp_enroll"), color: "blue" as const },
     { label: "Total Live Enrollment", value: getEnrollValue("live_enroll"), color: "emerald" as const },
     { label: "Total Chance Print", value: getEnrollValue("lt_enroll"), color: "violet" as const },

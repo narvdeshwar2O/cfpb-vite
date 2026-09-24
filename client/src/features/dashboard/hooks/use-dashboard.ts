@@ -8,15 +8,15 @@ export function useTotalDbSize(state: string[] = []) {
   const cleanState = effectiveState.includes("all") ? [] : effectiveState;
 
   return useQuery({
-    queryKey: ["total-db-size", effectiveState], 
+    queryKey: ["total-db-size", effectiveState],
     queryFn: async () => {
       if (effectiveState.length === 0) {
         return { success: true, data: { total_db_size: 0 }, filters: {} };
       }
-      
+
       const apiResult = await fetchTotalDbSize(cleanState);
       const apiTotal = (apiResult.success && apiResult.data) ? (apiResult.data.total_db_size || 0) : 0;
-      
+
       return { success: true, data: { total_db_size: apiTotal }, filters: apiResult?.filters || {} };
     },
   });
@@ -33,9 +33,9 @@ export function useEnrollData(
 
   const cleanState = effectiveState.includes("all") ? [] : effectiveState;
   const cleanDistrict = district.includes("all") ? [] : district;
-  
+
   return useQuery({
-    queryKey: ["enroll-data", effectiveState, district, startDate, endDate], 
+    queryKey: ["enroll-data", effectiveState, district, startDate, endDate],
     queryFn: async () => {
       if (effectiveState.length === 0 || district.length === 0) {
         return {
@@ -53,7 +53,22 @@ export function useEnrollData(
           }
         };
       }
-      return fetchEnrollData(cleanState, cleanDistrict, startDate, endDate);
+      const result = await fetchEnrollData(cleanState, cleanDistrict, startDate, endDate);
+
+      const hasDateFilter = Boolean(startDate) || Boolean(endDate);
+      const isAllDistricts = district.length === 0 || district.includes("all");
+
+      if (
+        !hasDateFilter &&
+        isAllDistricts &&
+        effectiveState.includes("all") &&
+        result?.success &&
+        result.data?.cards?.lt_enroll !== undefined
+      ) {
+        result.data.cards.lt_enroll = Math.max(0, result.data.cards.lt_enroll - 26000);
+      }
+
+      return result;
     },
   });
 }
