@@ -4,6 +4,7 @@ import { useFilters } from "@/app/providers/filter-provider";
 import { useFilterOptions } from "./use-filter-options";
 import { useStateScope } from "@/hooks/useStateScope";
 import { useLocation } from "react-router-dom";
+import { useCountryMaster } from "@/shared/hooks/use-master";
 
 export function FilterBarLocation() {
   const { pathname } = useLocation();
@@ -37,14 +38,14 @@ export function FilterBarLocation() {
 
   const isForeignersRoute = pathname === "/fpi/foreigners";
 
-  const dummyCountries = [
+  const { data: countryMasterData } = useCountryMaster();
+
+  const countryOptions = [
     { label: "All Selected", value: "all" },
-    ...[
-      "Afghanistan", "Bangladesh", "Bhutan", "Brazil", "Canada",
-      "China", "Egypt", "France", "Germany", "India",
-      "Indonesia", "Italy", "Japan", "Malaysia", "Myanmar",
-      "Nepal", "Pakistan", "Russia", "Sri Lanka", "United States"
-    ].map(c => ({ label: c, value: c.toLowerCase() }))
+    ...(countryMasterData?.data?.map(c => ({ 
+      label: c.country, 
+      value: c.country.toLowerCase() 
+    })) || [])
   ];
 
   const handleCountryChange = (val: string[]) => {
@@ -71,7 +72,7 @@ export function FilterBarLocation() {
             <label className="text-slate-600 font-medium text-sm">Country</label>
             <div className="w-64">
               <MultiSelect
-                options={dummyCountries}
+                options={countryOptions}
                 value={getFilterArray("country")}
                 onChange={handleCountryChange}
                 placeholder="Select Country..."
