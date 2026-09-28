@@ -10,9 +10,9 @@ interface SidebarAdminProps {
 
 export function SidebarAdmin({ pathname, isCollapsed, adminLinks }: SidebarAdminProps) {
   return (
-    <div className="mt-4 flex flex-col gap-1.5">
+    <div className="mt-3 flex flex-col gap-1">
       {!isCollapsed && (
-        <h3 className="px-4 mb-2 text-sm font-semibold tracking-wide text-slate-500">
+        <h3 className="px-4 text-sm font-semibold tracking-wide text-slate-500">
           Administration
         </h3>
       )}
@@ -29,8 +29,8 @@ export function SidebarAdmin({ pathname, isCollapsed, adminLinks }: SidebarAdmin
             onMouseEnter={() => link.preload?.()}
             title={isCollapsed ? link.label : undefined}
             className={cn(
-              "w-full flex items-center py-3 rounded-xl font-semibold transition-all duration-200 group",
-              isCollapsed ? "justify-center px-0" : "gap-3 px-4 text-[18px]",
+              "w-full flex items-center py-1 rounded-md font-semibold transition-all duration-200 group",
+              isCollapsed ? "justify-center px-0" : "gap-3 px-4 text-[16px]",
               isActive
                 ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/20"
                 : "text-black hover:bg-indigo-600 hover:text-white"

@@ -13,7 +13,9 @@ export const Sidebar = React.memo(function Sidebar() {
   const { pathname } = useLocation();
   const { isSuperAdmin } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    "FPI Status": true,
+  });
 
   return (
     <aside
@@ -30,7 +32,7 @@ export const Sidebar = React.memo(function Sidebar() {
       </button>
 
       <div className="flex flex-col items-center justify-center mb-4 mt-2 shrink-0 overflow-hidden">
-        <div className="w-full px-2 bg-tranparent flex items-center justify-center mb-1">
+        <div className="w-full px-2 flex items-center justify-center mb-1">
           <img
             src="/logo.png"
             alt="Logo"
@@ -41,12 +43,9 @@ export const Sidebar = React.memo(function Sidebar() {
           />
         </div>
         {!isCollapsed && (
-          <>
-            {/* <h2 className="text-indigo-600 font-bold tracking-wider text-[24px]"></h2> */}
-            <p className="text-indigo-500 text-sm font-bold uppercase tracking-widest whitespace-nowrap">
-              NAFIS  Dashboard
-            </p>
-          </>
+          <p className="text-indigo-500 text-sm font-bold uppercase tracking-widest whitespace-nowrap">
+            NAFIS Dashboard
+          </p>
         )}
       </div>
 
@@ -74,7 +73,6 @@ export const Sidebar = React.memo(function Sidebar() {
 
       {/* Developed By Footer */}
       <div className={cn("mt-auto pt-4 flex flex-col items-center justify-center shrink-0 border-t border-slate-200", isCollapsed ? "px-1" : "px-4")}>
-        {/* {!isCollapsed && <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Developed by</span>} */}
         <img
           src="/opsvision.webp"
           alt="Opsvision Logo"
