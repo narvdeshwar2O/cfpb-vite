@@ -29,21 +29,22 @@ export const Sidebar = React.memo(function Sidebar() {
         {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
       </button>
 
-      <div className="flex flex-col items-center justify-center mb-8 mt-3 shrink-0 overflow-hidden">
+      <div className="flex flex-col items-center justify-center mb-4 mt-2 shrink-0 overflow-hidden">
         <div className="w-full px-2 bg-tranparent flex items-center justify-center mb-1">
           <img
             src="/logo.png"
             alt="Logo"
-            width={259}
-            height={80}
-            className="w-full h-auto object-contain transition-all duration-300"
+            className={cn(
+              "object-contain transition-all duration-300",
+              isCollapsed ? "w-10 h-10" : "w-24 h-24"
+            )}
           />
         </div>
         {!isCollapsed && (
           <>
-            <h2 className="text-indigo-600 font-bold tracking-wider text-[28px]">NAFIS</h2>
-            <p className="text-indigo-500 text-md font-bold uppercase tracking-widest whitespace-nowrap">
-              Dashboard
+            {/* <h2 className="text-indigo-600 font-bold tracking-wider text-[24px]"></h2> */}
+            <p className="text-indigo-500 text-sm font-bold uppercase tracking-widest whitespace-nowrap">
+              NAFIS  Dashboard
             </p>
           </>
         )}
