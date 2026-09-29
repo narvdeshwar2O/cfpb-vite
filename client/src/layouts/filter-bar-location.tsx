@@ -38,7 +38,7 @@ export function FilterBarLocation() {
 
   const isForeignersRoute = pathname === "/fpi/foreigners";
 
-  const { data: countryMasterData } = useCountryMaster();
+  const { data: countryMasterData } = useCountryMaster(isForeignersRoute);
 
   const countryOptions = [
     { label: "All Selected", value: "all" },

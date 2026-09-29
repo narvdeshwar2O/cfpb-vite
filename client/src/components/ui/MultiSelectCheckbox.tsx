@@ -232,7 +232,11 @@ export const MultiSelectCheckbox = ({
             </div>
 
             {/* Options */}
-            <div className="space-y-1 max-h-56 overflow-y-auto">
+            <div 
+              className="space-y-1 max-h-56 overflow-y-auto"
+              onWheel={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+            >
               {requireSearch && search.trim().length > 0 && search.trim().length < 2 ? (
                 <div className="text-sm text-blue-600 px-1 py-2 italic">
                   Please type at least 2 characters to search

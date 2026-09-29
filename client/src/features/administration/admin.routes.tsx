@@ -4,6 +4,7 @@ import type { RouteObject } from "react-router-dom";
 import { ROUTES } from "@/shared/constants/routes";
 import { Users, Shield, Key } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionGuard } from "@/components/auth/permission-guard";
 
 // Admin pages are currently default exported in src/pages/admin
 const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
@@ -15,7 +16,9 @@ export const adminRoutes: RouteObject[] = [
     path: ROUTES.adminUsers,
     element: (
       <Suspense fallback={<PageSkeleton />}>
-        <AdminUsers />
+        <PermissionGuard required="users.manage">
+          <AdminUsers />
+        </PermissionGuard>
       </Suspense>
     ),
     handle: {
@@ -28,7 +31,9 @@ export const adminRoutes: RouteObject[] = [
     path: ROUTES.adminRoles,
     element: (
       <Suspense fallback={<PageSkeleton />}>
-        <AdminRoles />
+        <PermissionGuard required="roles.manage">
+          <AdminRoles />
+        </PermissionGuard>
       </Suspense>
     ),
     handle: {
@@ -41,7 +46,9 @@ export const adminRoutes: RouteObject[] = [
     path: ROUTES.adminPermissions,
     element: (
       <Suspense fallback={<PageSkeleton />}>
-        <AdminPermissions />
+        <PermissionGuard required="permissions.manage">
+          <AdminPermissions />
+        </PermissionGuard>
       </Suspense>
     ),
     handle: {

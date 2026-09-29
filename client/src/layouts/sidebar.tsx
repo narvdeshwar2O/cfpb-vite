@@ -11,10 +11,34 @@ import { SidebarAdmin } from "./components/sidebar-admin";
 
 export const Sidebar = React.memo(function Sidebar() {
   const { pathname } = useLocation();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, hasPermission } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     "FPI Status": true,
+  });
+
+  const visibleLinks = NAV_LINKS.map((link) => {
+    // If it has children, filter the children first
+    if (link.children) {
+      const visibleChildren = link.children.filter((child) => {
+        if ("requiredPermission" in child && child.requiredPermission) {
+          return hasPermission(child.requiredPermission as string);
+        }
+        return true;
+      });
+      return { ...link, children: visibleChildren };
+    }
+    return link;
+  }).filter((link) => {
+    // Hide parent entirely if it had children but all were filtered out
+    if (link.children && link.children.length === 0) {
+      return false;
+    }
+    // Check parent-level required permissions
+    if ("requiredPermission" in link && link.requiredPermission) {
+      return hasPermission(link.requiredPermission as string);
+    }
+    return true;
   });
 
   return (
@@ -50,7 +74,7 @@ export const Sidebar = React.memo(function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto pr-2 overflow-x-hidden">
-        {NAV_LINKS.map((link) => (
+        {visibleLinks.map((link) => (
           <SidebarItem
             key={link.label}
             link={link}

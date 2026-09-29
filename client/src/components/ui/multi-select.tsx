@@ -114,6 +114,8 @@ export function MultiSelect({ options, value, onChange, placeholder = "Select...
         <div 
           className="p-1 max-h-60 overflow-auto"
           onScroll={handleScroll}
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
         >
           {filteredOptions.length === 0 && <div className="py-6 text-center text-sm text-muted-foreground">No options found.</div>}
           {filteredOptions.slice(0, visibleCount).map((opt) => {

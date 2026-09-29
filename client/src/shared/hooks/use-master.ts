@@ -9,10 +9,11 @@ export function useStateDistrictMaster() {
   });
 }
 
-export function useCountryMaster() {
+export function useCountryMaster(enabled = true) {
   return useQuery({
     queryKey: ["country-master"],
     queryFn: fetchCountryMaster,
     staleTime: 1000 * 60 * 60, // 1 hour
+    enabled,
   });
 }

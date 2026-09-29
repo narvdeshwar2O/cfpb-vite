@@ -4,6 +4,7 @@ import { lazyImport } from "@/shared/utils/lazyImport";
 import { ROUTES } from "@/shared/constants/routes";
 import { Activity } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionGuard } from "@/components/auth/permission-guard";
 
 // The WorkflowLivePage acts as the unified workflow page.
 // In Phase 4, we will update it to read the `:type` param.
@@ -17,7 +18,9 @@ export const workflowRoutes: RouteObject[] = [
     path: ROUTES.workflowLive,
     element: (
       <Suspense fallback={<PageSkeleton />}>
-        <WorkflowPage />
+        <PermissionGuard required="live.enrolment.view">
+          <WorkflowPage />
+        </PermissionGuard>
       </Suspense>
     ),
     handle: {
@@ -30,7 +33,9 @@ export const workflowRoutes: RouteObject[] = [
     path: ROUTES.workflowSlip,
     element: (
       <Suspense fallback={<PageSkeleton />}>
-        <WorkflowPage />
+        <PermissionGuard required="slip.view">
+          <WorkflowPage />
+        </PermissionGuard>
       </Suspense>
     ),
     handle: {

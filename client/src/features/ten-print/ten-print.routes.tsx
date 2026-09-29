@@ -4,6 +4,7 @@ import { lazyImport } from "@/shared/utils/lazyImport";
 import { ROUTES } from "@/shared/constants/routes";
 import { Fingerprint } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionGuard } from "@/components/auth/permission-guard";
 
 const TenPrintPage = lazyImport(
   () => import("./ten-print-page"),
@@ -15,7 +16,9 @@ export const tenPrintRoutes: RouteObject[] = [
     path: ROUTES.tenPrint,
     element: (
       <Suspense fallback={<PageSkeleton />}>
-        <TenPrintPage />
+        <PermissionGuard required="ten.print.view">
+          <TenPrintPage />
+        </PermissionGuard>
       </Suspense>
     ),
     handle: {

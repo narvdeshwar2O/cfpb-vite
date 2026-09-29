@@ -4,6 +4,7 @@ import { lazyImport } from "@/shared/utils/lazyImport";
 import { ROUTES } from "@/shared/constants/routes";
 import { LayoutDashboard } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/page-skeleton";
+import { PermissionGuard } from "@/components/auth/permission-guard";
 
 const CentralDashboardPage = lazyImport(
   () => import("./dashboard-page"),
@@ -15,7 +16,9 @@ export const dashboardRoutes: RouteObject[] = [
     path: ROUTES.dashboard,
     element: (
       <Suspense fallback={<PageSkeleton />}>
-        <CentralDashboardPage />
+        <PermissionGuard required="dashboard.view">
+          <CentralDashboardPage />
+        </PermissionGuard>
       </Suspense>
     ),
     handle: {
