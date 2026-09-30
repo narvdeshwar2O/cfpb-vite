@@ -5,6 +5,8 @@ import { ROUTES } from "@/shared/constants/routes";
 import { ErrorPage } from "@/pages/ErrorPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
+import { UnauthorizedPage } from "@/pages/UnauthorizedPage";
+
 // Import route modules
 import { dashboardRoutes } from "@/features/dashboard/dashboard.routes";
 import { adminRoutes } from "@/features/administration/admin.routes";
@@ -22,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: ROUTES.login,
         element: <LoginForm />,
+      },
+      {
+        path: "/unauthorized",
+        element: <UnauthorizedPage />,
       },
     ],
   },

@@ -11,8 +11,8 @@ export function PermissionGuard({ required, children }: PermissionGuardProps) {
 
   // Super Admins automatically bypass permission checks
   if (!isSuperAdmin && !hasPermission(required)) {
-    // If the user doesn't have permission, redirect them to the dashboard
-    return <Navigate to="/" replace />;
+    // If the user doesn't have permission, redirect them to the unauthorized page
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;

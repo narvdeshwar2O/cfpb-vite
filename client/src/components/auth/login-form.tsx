@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { Mail, Lock } from "lucide-react"
 import { useState } from "react"
 import { useAuth } from "@/context/AuthContext"
+import { ROUTES } from "@/shared/constants/routes"
 
 export function LoginForm() {
   const navigate = useNavigate()
@@ -23,7 +24,39 @@ export function LoginForm() {
     const success = await login(email, password)
 
     if (success) {
-      navigate("/")
+      // Parse the user data from localStorage to read permissions instantly
+      const userStr = localStorage.getItem("userData")
+      let redirectPath = "/"
+
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        const perms = user.permissions || []
+        const isSuperAdmin = (user.roles || []).includes("Super Admin")
+
+        if (!isSuperAdmin && !perms.includes("dashboard.view")) {
+          // If they don't have dashboard access, find the first page they DO have access to
+          if (perms.includes("ten.print.view")) redirectPath = ROUTES.tenPrint
+          else if (perms.includes("chance.print.view")) redirectPath = ROUTES.chancePrint
+          else if (perms.includes("user.wise.view")) redirectPath = ROUTES.userWise
+          else if (perms.includes("live.enrolment.view")) redirectPath = ROUTES.workflowLive
+          else if (perms.includes("slip.view")) redirectPath = ROUTES.workflowSlip
+          else if (perms.includes("interstate.view")) redirectPath = ROUTES.interstate
+          else if (perms.includes("fpi.human_body.view")) redirectPath = ROUTES.fpiHumanBody
+          else if (perms.includes("fpi.property.view")) redirectPath = ROUTES.fpiProperty
+          else if (perms.includes("fpi.sll.view")) redirectPath = ROUTES.fpiSll
+          else if (perms.includes("fpi.ten_print.view")) redirectPath = ROUTES.fpiTenPrint
+          else if (perms.includes("fpi.foreigners.view")) redirectPath = ROUTES.fpiForeigners
+          else if (perms.includes("fpi.latent.view")) redirectPath = ROUTES.fpiLatent
+          else if (perms.includes("fpi.chance_print.view")) redirectPath = ROUTES.fpiChancePrint
+          else if (perms.includes("fpi.expert_opinion.view")) redirectPath = ROUTES.fpiExpertOpinion
+          else if (perms.includes("users.manage")) redirectPath = ROUTES.adminUsers
+          else if (perms.includes("roles.manage")) redirectPath = ROUTES.adminRoles
+          else if (perms.includes("permissions.manage")) redirectPath = ROUTES.adminPermissions
+          else redirectPath = "/unauthorized" // No known routes available
+        }
+      }
+
+      navigate(redirectPath)
     } else {
       setError("Invalid credentials. Please try again.")
       setIsLoading(false)
