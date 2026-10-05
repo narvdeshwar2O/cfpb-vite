@@ -86,6 +86,17 @@ export async function updateUserState(
   });
 }
 
+export async function updateUserProfile(
+  userId: string,
+  username: string,
+  fullName: string | null
+): Promise<void> {
+  await request(`/admin/users/${userId}/profile`, {
+    method: "PUT",
+    body: JSON.stringify({ username, fullName }),
+  });
+}
+
 export async function setUserActive(userId: string, isActive: boolean): Promise<void> {
   await request(`/admin/users/${userId}/active`, {
     method: "PUT",

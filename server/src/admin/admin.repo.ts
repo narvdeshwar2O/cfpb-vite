@@ -167,6 +167,14 @@ export async function usernameTaken(username: string): Promise<boolean> {
   return res.rowCount! > 0;
 }
 
+export async function usernameTakenByOtherUser(username: string, excludeUserId: string): Promise<boolean> {
+  const res = await query(`SELECT 1 FROM users WHERE username = $1 AND id != $2`, [
+    username,
+    excludeUserId,
+  ]);
+  return res.rowCount! > 0;
+}
+
 export async function userExists(userId: string): Promise<boolean> {
   const res = await query(`SELECT 1 FROM users WHERE id = $1`, [userId]);
   return res.rowCount! > 0;
@@ -231,3 +239,15 @@ export async function setUserPassword(
     [hash, userId]
   );
 }
+
+export async function updateUserProfile(
+  userId: string,
+  username: string,
+  fullName: string | null
+): Promise<void> {
+  await query(
+    `UPDATE users SET username = $1, full_name = $2, updated_at = now() WHERE id = $3`,
+    [username, fullName, userId]
+  );
+}
+

@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +55,7 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
   const [roles, setRoles] = useState<string[]>([]);
   const [stateValue, setStateValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [prevOpen, setPrevOpen] = useState(false);
 
   const { data: masterData } = useStateDistrictMaster();
   
@@ -77,9 +77,8 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
       ? [stateValue, ...apiStates]
       : apiStates;
 
-  // Reset the form whenever the dialog opens or the target user changes.
-  useEffect(() => {
-    if (!open) return;
+  // Sync state during render when dialog opens (React standard alternative to useEffect)
+  if (open && !prevOpen) {
     setUsername(editingUser?.username ?? "");
     setPassword("");
     setFullName(editingUser?.fullName ?? "");
@@ -92,7 +91,10 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
     } else {
       setStateValue("");
     }
-  }, [open, editingUser, apiStates, apiStates.length]);
+    setPrevOpen(true);
+  } else if (!open && prevOpen) {
+    setPrevOpen(false);
+  }
 
   const validate = (): string | null => {
     if (!isEdit) {
@@ -118,9 +120,11 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
     setSubmitting(true);
     try {
       if (isEdit && editingUser) {
-        await updateUserRoles(editingUser.id, roles);
-        await updateUserState(editingUser.id, stateToSave);
-        toast.success(`Updated ${editingUser.username}`);
+        await Promise.all([
+          updateUserRoles(editingUser.id, roles),
+          updateUserState(editingUser.id, stateToSave)
+        ]);
+        toast.success(`Updated roles and state for ${editingUser.username}`);
       } else {
         await createUser({
           username: username.trim(),

@@ -1,5 +1,6 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
-import { requireAuth, requirePermission } from "../auth/middleware.js";
+import { requireAuth, requirePermission, type AuthedRequest } from "../auth/middleware.js";
+import { getUserAccess } from "../auth/rbac.repo.js";
 import * as repo from "./admin.repo.js";
 
 export const adminRouter = Router();
@@ -152,12 +153,18 @@ adminRouter.put(
 adminRouter.put(
   "/users/:id/active",
   requirePermission("users.manage"),
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
     const { id } = req.params;
     const { isActive } = req.body ?? {};
     if (typeof isActive !== "boolean") {
       return res.status(400).json({ message: "isActive must be a boolean" });
     }
+    
+    // Prevent self-deactivation
+    if (req.user!.sub === id && !isActive) {
+      return res.status(403).json({ message: "You cannot deactivate your own account" });
+    }
+
     if (!(await repo.userExists(id))) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -182,3 +189,44 @@ adminRouter.put(
     return res.json({ ok: true });
   })
 );
+
+adminRouter.put(
+  '/users/:id/profile',
+  requirePermission('users.manage'),
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    // Only super admins can update profiles
+    const access = await getUserAccess(req.user!.sub);
+    if (!access.isSuperAdmin) {
+      return res.status(403).json({ message: 'Only Super Admins can update profiles' });
+    }
+
+    const { id } = req.params;
+
+    // Super admins cannot edit their own profile
+    if (req.user!.sub === id) {
+      return res.status(403).json({ message: 'Super Admins cannot edit their own profile' });
+    }
+
+    const { username, fullName } = req.body ?? {};
+    if (typeof username !== 'string' || !username.trim()) {
+      return res.status(400).json({ message: 'username is required' });
+    }
+    
+    // Check if another user has this username
+    const existing = await repo.usernameTakenByOtherUser(username.trim(), id);
+    if (existing) {
+      return res.status(409).json({ message: 'username already exists' });
+    }
+    
+    try {
+      await repo.updateUserProfile(id, username.trim(), typeof fullName === 'string' ? fullName.trim() : null);
+      return res.json({ ok: true });
+    } catch (err: any) {
+      if (err.code === '23505') { // Postgres unique_violation
+        return res.status(409).json({ message: 'username already exists' });
+      }
+      throw err;
+    }
+  })
+);
+

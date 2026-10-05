@@ -27,6 +27,7 @@ import {
   Power,
   RefreshCw,
   Users as UsersIcon,
+  User,
 } from "lucide-react";
 import {
   listRoles,
@@ -36,18 +37,23 @@ import {
 } from "@/services/adminApi";
 import { UserFormDialog } from "./UserFormDialog";
 import { PasswordResetDialog } from "./PasswordResetDialog";
+import { UserProfileDialog } from "./UserProfileDialog";
+import { useAuth } from "@/context/AuthContext";
 
 /** Admin page: list users, create them, and edit their roles + assigned state. */
 const AdminUsers: React.FC = () => {
+  const { isSuperAdmin, user: currentUser } = useAuth();
+
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
-  const [pwdUser, setPwdUser] = useState<AdminUser | null>(null);
-  const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
+  // Unified state for managing all dialogs
+  const [activeDialog, setActiveDialog] = useState<{
+    type: "create" | "edit-roles" | "edit-profile" | "reset-password" | null;
+    user: AdminUser | null;
+  }>({ type: null, user: null });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,28 +75,15 @@ const AdminUsers: React.FC = () => {
     load();
   }, [load]);
 
-  // Defensive: Radix (dropdown-menu 2.1.x + dialog 1.1.x) can leave
-  // `pointer-events: none` on <body> after a menu→dialog interaction, which
-  // freezes every dropdown on the page. Clear it whenever no dialog is open.
+  // Defensive: Radix can leave pointer-events stuck if a dialog unmounts poorly.
   useEffect(() => {
-    if (!dialogOpen && !pwdDialogOpen) {
+    if (!activeDialog.type) {
       document.body.style.pointerEvents = "";
     }
-  }, [dialogOpen, pwdDialogOpen]);
+  }, [activeDialog.type]);
 
-  const openCreate = () => {
-    setEditingUser(null);
-    setDialogOpen(true);
-  };
-
-  const openEdit = (user: AdminUser) => {
-    setEditingUser(user);
-    setDialogOpen(true);
-  };
-
-  const openPasswordReset = (user: AdminUser) => {
-    setPwdUser(user);
-    setPwdDialogOpen(true);
+  const openDialog = (type: typeof activeDialog.type, user: AdminUser | null = null) => {
+    setActiveDialog({ type, user });
   };
 
   const toggleActive = async (user: AdminUser) => {
@@ -116,7 +109,7 @@ const AdminUsers: React.FC = () => {
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
-            <Button size="sm" onClick={openCreate}>
+            <Button size="sm" onClick={() => openDialog("create")}>
               <Plus className="mr-2 h-4 w-4" />
               Add User
             </Button>
@@ -173,7 +166,10 @@ const AdminUsers: React.FC = () => {
                     </TableCell>
                     <TableCell>{user.state ?? "—"}</TableCell>
                     <TableCell>
-                      <Badge variant={user.isActive ? "default" : "outline"}>
+                      <Badge 
+                        variant={user.isActive ? "default" : "destructive"}
+                        className={!user.isActive ? "text-white" : ""}
+                      >
                         {user.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
@@ -188,25 +184,36 @@ const AdminUsers: React.FC = () => {
                           {/* Defer dialog-opening to the next tick so the menu
                               finishes closing first (avoids Radix's stuck
                               pointer-events bug that freezes all dropdowns). */}
+                          {isSuperAdmin && currentUser?.id !== user.id && (
+                            <DropdownMenuItem
+                              onSelect={() => setTimeout(() => openDialog("edit-profile", user), 0)}
+                            >
+                              <User className="mr-2 h-4 w-4" />
+                              Edit profile
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
-                            onSelect={() => setTimeout(() => openEdit(user), 0)}
+                            onSelect={() => setTimeout(() => openDialog("edit-roles", user), 0)}
                           >
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit roles & state
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onSelect={() => setTimeout(() => openPasswordReset(user), 0)}
+                            onSelect={() => setTimeout(() => openDialog("reset-password", user), 0)}
                           >
                             <KeyRound className="mr-2 h-4 w-4" />
                             Reset password
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onSelect={() => setTimeout(() => toggleActive(user), 0)}
-                          >
-                            <Power className="mr-2 h-4 w-4" />
-                            {user.isActive ? "Deactivate" : "Activate"}
-                          </DropdownMenuItem>
+                          {currentUser?.id !== user.id && (
+                            <DropdownMenuItem
+                              className={user.isActive ? "text-destructive focus:text-destructive focus:bg-destructive/10" : ""}
+                              onSelect={() => setTimeout(() => toggleActive(user), 0)}
+                            >
+                              <Power className="mr-2 h-4 w-4" />
+                              {user.isActive ? "Deactivate" : "Activate"}
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -219,17 +226,24 @@ const AdminUsers: React.FC = () => {
       </Card>
 
       <UserFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={activeDialog.type === "create" || activeDialog.type === "edit-roles"}
+        onOpenChange={(open) => !open && openDialog(null)}
         roleOptions={roleOptions}
-        editingUser={editingUser}
+        editingUser={activeDialog.user}
+        onSaved={load}
+      />
+
+      <UserProfileDialog
+        open={activeDialog.type === "edit-profile"}
+        onOpenChange={(open) => !open && openDialog(null)}
+        editingUser={activeDialog.user}
         onSaved={load}
       />
 
       <PasswordResetDialog
-        open={pwdDialogOpen}
-        onOpenChange={setPwdDialogOpen}
-        user={pwdUser}
+        open={activeDialog.type === "reset-password"}
+        onOpenChange={(open) => !open && openDialog(null)}
+        user={activeDialog.user}
       />
     </div>
   );
