@@ -39,10 +39,12 @@ import { UserFormDialog } from "./UserFormDialog";
 import { PasswordResetDialog } from "./PasswordResetDialog";
 import { UserProfileDialog } from "./UserProfileDialog";
 import { useAuth } from "@/context/AuthContext";
+import { getRolePriority } from "@/constants/rbac";
 
 /** Admin page: list users, create them, and edit their roles + assigned state. */
 const AdminUsers: React.FC = () => {
-  const { isSuperAdmin, user: currentUser } = useAuth();
+  const { isSuperAdmin, user: currentUser, roles: currentRoles } = useAuth();
+  const callerPriority = isSuperAdmin ? 100 : getRolePriority(currentRoles);
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [roleOptions, setRoleOptions] = useState<string[]>([]);
@@ -174,48 +176,62 @@ const AdminUsers: React.FC = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" aria-label="Row actions">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {/* Defer dialog-opening to the next tick so the menu
-                              finishes closing first (avoids Radix's stuck
-                              pointer-events bug that freezes all dropdowns). */}
-                          {isSuperAdmin && currentUser?.id !== user.id && (
-                            <DropdownMenuItem
-                              onSelect={() => setTimeout(() => openDialog("edit-profile", user), 0)}
-                            >
-                              <User className="mr-2 h-4 w-4" />
-                              Edit profile
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onSelect={() => setTimeout(() => openDialog("edit-roles", user), 0)}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit roles & state
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={() => setTimeout(() => openDialog("reset-password", user), 0)}
-                          >
-                            <KeyRound className="mr-2 h-4 w-4" />
-                            Reset password
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {currentUser?.id !== user.id && (
-                            <DropdownMenuItem
-                              className={user.isActive ? "text-destructive focus:text-destructive focus:bg-destructive/10" : ""}
-                              onSelect={() => setTimeout(() => toggleActive(user), 0)}
-                            >
-                              <Power className="mr-2 h-4 w-4" />
-                              {user.isActive ? "Deactivate" : "Activate"}
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {(() => {
+                        const targetPriority = getRolePriority(user.roles);
+                        const isSelf = currentUser?.id === user.id;
+                        const canManage = isSuperAdmin || targetPriority < callerPriority;
+
+                        if (!canManage && !isSuperAdmin) {
+                          return <span className="text-xs text-muted-foreground italic">Restricted</span>;
+                        }
+
+                        return (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" aria-label="Row actions">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {/* Defer dialog-opening to the next tick so the menu
+                                  finishes closing first (avoids Radix's stuck
+                                  pointer-events bug that freezes all dropdowns). */}
+                              {isSuperAdmin && !isSelf && (
+                                <DropdownMenuItem
+                                  onSelect={() => setTimeout(() => openDialog("edit-profile", user), 0)}
+                                >
+                                  <User className="mr-2 h-4 w-4" />
+                                  Edit profile
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onSelect={() => setTimeout(() => openDialog("edit-roles", user), 0)}
+                              >
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit roles & state
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={() => setTimeout(() => openDialog("reset-password", user), 0)}
+                              >
+                                <KeyRound className="mr-2 h-4 w-4" />
+                                Reset password
+                              </DropdownMenuItem>
+                              {!isSelf && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className={user.isActive ? "text-destructive focus:text-destructive focus:bg-destructive/10" : ""}
+                                    onSelect={() => setTimeout(() => toggleActive(user), 0)}
+                                  >
+                                    <Power className="mr-2 h-4 w-4" />
+                                    {user.isActive ? "Deactivate" : "Activate"}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        );
+                      })()}
                     </TableCell>
                   </TableRow>
                 ))

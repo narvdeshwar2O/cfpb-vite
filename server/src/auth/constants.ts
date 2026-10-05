@@ -2,12 +2,17 @@ export const SUPER_ADMIN_ROLE = "Super Admin";
 export const CFPB_ADMIN_ROLE = "CFPB ADMIN";
 export const STATE_ADMIN_ROLE = "STATE ADMIN";
 export const STATE_OPERATOR_ROLE = "STATE OPERATOR";
-export const STATE_VIEWER_ROLE = "State Viewer"; // legacy alias
 
+// Helper: Normalize string for comparison (removes spaces, underscores, lowercase)
 export function normalizeRoleName(name: string): string {
   return name ? name.toLowerCase().replace(/[\s_-]+/g, "") : "";
 }
 
+/**
+ * Numeric priority hierarchy:
+ * Higher number = higher authority.
+ * A role cannot manage or assign roles with priority >= its own priority.
+ */
 export const ROLE_HIERARCHY: Record<string, number> = {
   // Exact names
   "Super Admin": 100,

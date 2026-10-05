@@ -118,7 +118,13 @@ export async function roleExists(roleId: string): Promise<boolean> {
 }
 
 // ── Users ────────────────────────────────────────────────────────────────────
-export async function listUsers(): Promise<AdminUserDto[]> {
+export async function listUsers(stateFilter?: string | null): Promise<AdminUserDto[]> {
+  const whereClause = stateFilter ? `WHERE LOWER(u.state) = LOWER($2)` : "";
+  const params: unknown[] = [MODEL_TYPE];
+  if (stateFilter) {
+    params.push(stateFilter.trim());
+  }
+
   const res = await query<{
     id: string;
     username: string;
@@ -132,9 +138,10 @@ export async function listUsers(): Promise<AdminUserDto[]> {
        FROM users u
        LEFT JOIN model_has_roles mhr ON mhr.model_id = u.id AND mhr.model_type = $1
        LEFT JOIN roles r ON r.id = mhr.role_id
+      ${whereClause}
       GROUP BY u.id, u.username, u.full_name, u.state, u.is_active
       ORDER BY u.username`,
-    [MODEL_TYPE]
+    params
   );
   return res.rows.map((u) => ({
     id: u.id,
@@ -249,5 +256,35 @@ export async function updateUserProfile(
     `UPDATE users SET username = $1, full_name = $2, updated_at = now() WHERE id = $3`,
     [username, fullName, userId]
   );
+}
+
+export async function getUserById(userId: string): Promise<AdminUserDto | null> {
+  const res = await query<{
+    id: string;
+    username: string;
+    full_name: string | null;
+    state: string | null;
+    is_active: boolean;
+    roles: string[] | null;
+  }>(
+    `SELECT u.id, u.username, u.full_name, u.state, u.is_active,
+            COALESCE(array_agg(r.name) FILTER (WHERE r.name IS NOT NULL), '{}') AS roles
+       FROM users u
+       LEFT JOIN model_has_roles mhr ON mhr.model_id = u.id AND mhr.model_type = $1
+       LEFT JOIN roles r ON r.id = mhr.role_id
+      WHERE u.id = $2
+      GROUP BY u.id, u.username, u.full_name, u.state, u.is_active`,
+    [MODEL_TYPE, userId]
+  );
+  const u = res.rows[0];
+  if (!u) return null;
+  return {
+    id: u.id,
+    username: u.username,
+    fullName: u.full_name,
+    state: u.state,
+    isActive: u.is_active,
+    roles: u.roles ?? [],
+  };
 }
 

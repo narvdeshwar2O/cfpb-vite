@@ -86,13 +86,24 @@ export const Sidebar = React.memo(function Sidebar() {
           />
         ))}
 
-        {isSuperAdmin && (
-          <SidebarAdmin
-            pathname={pathname}
-            isCollapsed={isCollapsed}
-            adminLinks={ADMIN_NAV_LINKS}
-          />
-        )}
+        {(() => {
+          const visibleAdminLinks = ADMIN_NAV_LINKS.filter((link) => {
+            if ("requiredPermission" in link && link.requiredPermission) {
+              return hasPermission(link.requiredPermission as string);
+            }
+            return isSuperAdmin;
+          });
+
+          if (visibleAdminLinks.length === 0) return null;
+
+          return (
+            <SidebarAdmin
+              pathname={pathname}
+              isCollapsed={isCollapsed}
+              adminLinks={visibleAdminLinks}
+            />
+          );
+        })()}
       </nav>
 
       {/* Developed By Footer */}

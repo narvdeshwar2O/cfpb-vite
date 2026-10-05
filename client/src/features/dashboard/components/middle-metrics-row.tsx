@@ -37,6 +37,7 @@ export function MiddleMetricsRow() {
         stats={[
           { label: "Total Hit", value: formatNum("tp_hit") },
           { label: "Total No Hit", value: formatNum("tp_nohit") },
+          { label: "Delta", value: "0" },
         ]}
         indicatorColor="blue"
         className="h-22.5"
@@ -47,6 +48,7 @@ export function MiddleMetricsRow() {
         stats={[
           { label: "Total Hit", value: formatNum("live_hit") },
           { label: "Total No Hit", value: formatNum("live_nohit") },
+          { label: "Delta", value: "0" },
         ]}
         indicatorColor="emerald"
         className="h-22.5"
@@ -57,6 +59,7 @@ export function MiddleMetricsRow() {
         stats={[
           { label: "Total Hit", value: formatNum("lt_hit") },
           { label: "Total No Hit", value: formatNum("lt_nohit") },
+          { label: "Delta", value: "0" },
         ]}
         indicatorColor="violet"
         className="h-22.5"

@@ -19,8 +19,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
-import { STATE_VIEWER_ROLE } from "@/constants/rbac";
+import {
+  STATE_VIEWER_ROLE,
+  STATE_OPERATOR_ROLE,
+  STATE_ADMIN_ROLE,
+  getRolePriority,
+  isStateAdminRole,
+  isStateOperatorRole,
+} from "@/constants/rbac";
 import { useStateDistrictMaster } from "@/shared/hooks/use-master";
+import { useAuth } from "@/context/AuthContext";
 import {
   createUser,
   updateUserRoles,
@@ -48,6 +56,9 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
   onSaved,
 }) => {
   const isEdit = !!editingUser;
+  const { isSuperAdmin, roles: currentCallerRoles, state: callerState } = useAuth();
+  const callerPriority = isSuperAdmin ? 100 : getRolePriority(currentCallerRoles);
+  const isCallerStateAdmin = currentCallerRoles.some((r) => isStateAdminRole(r));
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -66,7 +77,25 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
     return [];
   }, [masterData]);
 
-  const isStateViewer = roles.includes(STATE_VIEWER_ROLE);
+  // Filter allowed role options based on hierarchy:
+  // - Super Admin: sees all
+  // - STATE ADMIN: only sees STATE OPERATOR
+  // - others: only roles with strictly lower priority than caller
+  const filteredRoleOptions = React.useMemo(() => {
+    if (isSuperAdmin) return roleOptions;
+    if (isCallerStateAdmin) {
+      return roleOptions.filter((r) => isStateOperatorRole(r));
+    }
+    return roleOptions.filter((r) => {
+      const p = getRolePriority([r]);
+      return p < callerPriority;
+    });
+  }, [roleOptions, isSuperAdmin, isCallerStateAdmin, callerPriority]);
+
+  const isStateViewer =
+    roles.includes(STATE_VIEWER_ROLE) ||
+    roles.includes(STATE_OPERATOR_ROLE) ||
+    roles.includes(STATE_ADMIN_ROLE);
 
   // shadcn Select forbids an empty-string item value, so use a sentinel for "no state".
   const NO_STATE = "__none__";
@@ -84,12 +113,17 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
     setFullName(editingUser?.fullName ?? "");
     setRoles(editingUser?.roles ?? []);
     
-    const rawState = editingUser?.state;
-    if (rawState) {
-      const match = apiStates.find((s) => s.toLowerCase() === rawState.toLowerCase());
-      setStateValue(match ?? rawState);
+    // For stateAdmin, force their assigned state
+    if (isCallerStateAdmin && callerState) {
+      setStateValue(callerState);
     } else {
-      setStateValue("");
+      const rawState = editingUser?.state;
+      if (rawState) {
+        const match = apiStates.find((s) => s.toLowerCase() === rawState.toLowerCase());
+        setStateValue(match ?? rawState);
+      } else {
+        setStateValue("");
+      }
     }
     setPrevOpen(true);
   } else if (!open && prevOpen) {
@@ -195,7 +229,7 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
           <div className="space-y-2">
             <Label>Roles</Label>
             <MultiSelectCheckbox
-              options={roleOptions}
+              options={filteredRoleOptions}
               selected={roles}
               onChange={setRoles}
               placeholder="Select roles"
@@ -209,12 +243,13 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
             <Select
               value={stateValue ? stateValue : NO_STATE}
               onValueChange={(v) => setStateValue(v === NO_STATE ? "" : v)}
+              disabled={isCallerStateAdmin}
             >
               <SelectTrigger id="state">
                 <SelectValue placeholder="Select a state" />
               </SelectTrigger>
               <SelectContent className="max-h-72">
-                <SelectItem value={NO_STATE}>No restriction</SelectItem>
+                {!isCallerStateAdmin && <SelectItem value={NO_STATE}>No restriction</SelectItem>}
                 {stateSelectOptions.map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}
@@ -223,8 +258,9 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              When set, this user only sees data for this state. Choose “No
-              restriction” to clear it. (Super Admins are never restricted.)
+              {isCallerStateAdmin
+                ? "As a State Admin, you can only create users assigned to your own state."
+                : "When set, this user only sees data for this state. Choose “No restriction” to clear it. (Super Admins are never restricted.)"}
             </p>
           </div>
         </div>

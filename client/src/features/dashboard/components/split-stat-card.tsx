@@ -19,7 +19,7 @@ export function SplitStatCard({
   indicatorColor,
 }: SplitStatCardProps) {
   const [showActual, setShowActual] = useState(false);
-  if (stats.length !== 2) return null;
+  if (!stats || stats.length === 0) return null;
   const color = indicatorColor ? colorStyles[indicatorColor] : null;
 
   return (
@@ -56,21 +56,21 @@ export function SplitStatCard({
           <CardContent
             key={idx}
             className={cn(
-              "flex-1 p-5 flex flex-col justify-center relative z-10",
-              idx === 0 ? "border-r border-slate-100" : "",
+              "flex-1 px-3 py-2 flex flex-col justify-center relative z-10 min-w-0",
+              idx < stats.length - 1 ? "border-r border-slate-100" : "",
             )}
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-1.5 mb-1 truncate">
               <Activity
-                className={cn("size-4", color ? color.icon : "text-slate-400")}
+                className={cn("size-3.5 shrink-0", color ? color.icon : "text-slate-400")}
               />
-              <div className="text-slate-500 text-xs font-semibold tracking-wide uppercase">
+              <div className="text-slate-500 text-[11px] font-semibold tracking-wide uppercase truncate">
                 {stat.label}
               </div>
             </div>
             <div
               className={cn(
-                "text-2xl font-bold tracking-tight",
+                "text-xl font-bold tracking-tight truncate",
                 color ? color.text : "text-slate-800",
               )}
             >

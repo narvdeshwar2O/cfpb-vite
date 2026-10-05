@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/sonner";
-import { Pencil, Plus, RefreshCw, ShieldCheck } from "lucide-react";
+import { Pencil, ShieldCheck } from "lucide-react";
 import {
   listPermissions,
   listRoles,
@@ -50,10 +50,12 @@ const AdminRoles: React.FC = () => {
     load();
   }, [load]);
 
+  /*
   const openCreate = () => {
     setEditingRole(null);
     setDialogOpen(true);
   };
+  */
 
   const openEdit = (role: AdminRole) => {
     setEditingRole(role);
@@ -68,6 +70,7 @@ const AdminRoles: React.FC = () => {
             <ShieldCheck className="h-5 w-5 text-blue-600" />
             Roles &amp; Permissions
           </CardTitle>
+          {/* Commented out Refresh and Add Role buttons
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
@@ -78,6 +81,7 @@ const AdminRoles: React.FC = () => {
               Add Role
             </Button>
           </div>
+          */}
         </CardHeader>
         <CardContent>
           {error && (

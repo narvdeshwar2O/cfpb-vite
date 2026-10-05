@@ -45,6 +45,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers: { ...authHeaders(), ...(options.headers ?? {}) },
   });
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem("userData");
+      window.location.href = "/login";
+    }
     const body = (await res.json().catch(() => ({}))) as { message?: string };
     throw new Error(body.message || `Request failed (${res.status})`);
   }

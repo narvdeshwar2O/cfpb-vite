@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
-import { KeySquare, Plus, RefreshCw } from "lucide-react";
+import { KeySquare } from "lucide-react";
 import {
   createPermission,
   listPermissions,
@@ -57,11 +57,13 @@ const AdminPermissions: React.FC = () => {
     load();
   }, [load]);
 
+  /*
   const openCreate = () => {
     setName("");
     setDescription("");
     setDialogOpen(true);
   };
+  */
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -89,6 +91,7 @@ const AdminPermissions: React.FC = () => {
             <KeySquare className="h-5 w-5 text-blue-600" />
             Permissions
           </CardTitle>
+          {/* Commented out Refresh and Add Permission buttons
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
@@ -99,6 +102,7 @@ const AdminPermissions: React.FC = () => {
               Add Permission
             </Button>
           </div>
+          */}
         </CardHeader>
         <CardContent>
           {error && (
