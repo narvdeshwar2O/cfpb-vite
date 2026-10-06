@@ -88,6 +88,9 @@ export const Sidebar = React.memo(function Sidebar() {
 
         {(() => {
           const visibleAdminLinks = ADMIN_NAV_LINKS.filter((link) => {
+            if ("superAdminOnly" in link && link.superAdminOnly) {
+              return isSuperAdmin;
+            }
             if ("requiredPermission" in link && link.requiredPermission) {
               return hasPermission(link.requiredPermission as string);
             }

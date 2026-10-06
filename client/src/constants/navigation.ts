@@ -7,6 +7,7 @@ import {
   FileDigit,
   Map,
   ShieldCheck,
+  Network,
 } from "lucide-react";
 
 import { ROUTES } from "@/shared/constants/routes";
@@ -138,5 +139,12 @@ export const ADMIN_NAV_LINKS = [
     icon: ShieldCheck,
     requiredPermission: "permissions.manage",
     preload: () => import("@/pages/admin/AdminPermissions")
+  },
+  {
+    label: "LDAP / AD",
+    href: ROUTES.adminLdap,
+    icon: Network,
+    superAdminOnly: true,
+    preload: () => import("@/pages/admin/AdminLdap")
   },
 ];

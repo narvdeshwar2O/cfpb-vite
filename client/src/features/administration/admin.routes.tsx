@@ -10,6 +10,7 @@ import { PermissionGuard } from "@/components/auth/permission-guard";
 const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
 const AdminRoles = lazy(() => import("@/pages/admin/AdminRoles"));
 const AdminPermissions = lazy(() => import("@/pages/admin/AdminPermissions"));
+const AdminLdap = lazy(() => import("@/pages/admin/AdminLdap"));
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -55,6 +56,20 @@ export const adminRoutes: RouteObject[] = [
       title: "Permissions",
       icon: Key,
       permission: "ADMIN",
+    },
+  },
+  {
+    path: ROUTES.adminLdap,
+    element: (
+      <Suspense fallback={<PageSkeleton />}>
+        <PermissionGuard superAdminOnly>
+          <AdminLdap />
+        </PermissionGuard>
+      </Suspense>
+    ),
+    handle: {
+      title: "LDAP / Active Directory",
+      permission: "SUPER_ADMIN",
     },
   },
 ];

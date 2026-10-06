@@ -462,3 +462,58 @@ adminRouter.put(
     }
   })
 );
+
+// ── LDAP / Active Directory Integration (SUPER ADMIN ONLY) ──────────────────
+adminRouter.get(
+  "/ldap-config",
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const access = await getUserAccess(req.user!.sub);
+    if (!access.isSuperAdmin) {
+      return res.status(403).json({ message: "Only Super Admins can access LDAP configuration" });
+    }
+    const { getLdapConfig } = await import("./ldap-config.repo.js");
+    const data = await getLdapConfig();
+    // Return masked password indicator so real credentials aren't exposed in plaintext over network
+    return res.json({
+      config: {
+        ...data,
+        bindPassword: data.bindPassword ? "••••••••••••" : "",
+      },
+    });
+  })
+);
+
+adminRouter.put(
+  "/ldap-config",
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const access = await getUserAccess(req.user!.sub);
+    if (!access.isSuperAdmin) {
+      return res.status(403).json({ message: "Only Super Admins can update LDAP configuration" });
+    }
+    const { saveLdapConfig } = await import("./ldap-config.repo.js");
+    await saveLdapConfig(req.body);
+    return res.json({ ok: true });
+  })
+);
+
+adminRouter.post(
+  "/ldap-config/test",
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const access = await getUserAccess(req.user!.sub);
+    if (!access.isSuperAdmin) {
+      return res.status(403).json({ message: "Only Super Admins can test LDAP configuration" });
+    }
+    const { testLdapConnection } = await import("../auth/ldap.service.js");
+    let { serverUrl, bindDn, bindPassword, baseDn } = req.body ?? {};
+    
+    // If password wasn't typed or is masked, retrieve existing stored password
+    if (!bindPassword || bindPassword === "••••••••••••") {
+      const { getLdapConfig } = await import("./ldap-config.repo.js");
+      const current = await getLdapConfig();
+      bindPassword = current.bindPassword;
+    }
+
+    const result = await testLdapConnection({ serverUrl, bindDn, bindPassword, baseDn });
+    return res.json(result);
+  })
+);

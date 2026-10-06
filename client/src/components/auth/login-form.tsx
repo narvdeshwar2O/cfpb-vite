@@ -10,6 +10,7 @@ import { ROUTES } from "@/shared/constants/routes"
 export function LoginForm() {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const [authType, setAuthType] = useState<"local" | "ldap">("local")
   const [email, setEmail] = useState("admin")
   const [password, setPassword] = useState("admin")
   const [error, setError] = useState("")
@@ -21,7 +22,7 @@ export function LoginForm() {
     setIsLoading(true)
     setError("")
 
-    const success = await login(email, password)
+    const success = await login(email, password, authType)
 
     if (success) {
       // Parse the user data from localStorage to read permissions instantly
@@ -58,14 +59,18 @@ export function LoginForm() {
 
       navigate(redirectPath)
     } else {
-      setError("Invalid credentials. Please try again.")
+      setError(
+        authType === "ldap"
+          ? "Invalid LDAP / Domain credentials. Please verify your domain username and password."
+          : "Invalid local credentials. Please try again."
+      )
       setIsLoading(false)
     }
   }
 
   return (
     <Card className="w-[450px] shadow-2xl shadow-indigo-900/10 border-0 rounded-2xl overflow-hidden bg-white border">
-      <CardHeader className="flex flex-col items-center gap-4 bg-slate-50 pt-10 pb-8 border-b border-slate-100">
+      <CardHeader className="flex flex-col items-center gap-4 bg-slate-50 pt-10 pb-6 border-b border-slate-100">
         <div className="w-20 h-24 bg-transparent flex items-center justify-center">
            <img src="/logo.png" alt="Logo" width={80} height={96} className="w-full h-full object-contain" />
         </div>
@@ -78,12 +83,44 @@ export function LoginForm() {
       </CardHeader>
 
       <form onSubmit={handleLogin}>
-        <CardContent className="flex flex-col gap-5 pt-8 pb-8 px-10">
+        <CardContent className="flex flex-col gap-4 pt-6 pb-6 px-10">
+          {/* Authentication Type Toggle */}
+          <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthType("local")
+                setError("")
+              }}
+              className={`py-2 rounded-lg transition-all ${
+                authType === "local"
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              Local Account
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthType("ldap")
+                setError("")
+              }}
+              className={`py-2 rounded-lg transition-all ${
+                authType === "ldap"
+                  ? "bg-white text-indigo-600 shadow-sm"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              LDAP / Domain
+            </button>
+          </div>
+
           <div className="relative">
             <Mail className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               required
-              placeholder="Email / Login ID"
+              placeholder={authType === "ldap" ? "Domain Username / sAMAccountName" : "Email / Login ID"}
               className="pl-10 h-12 bg-slate-50 border-slate-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -94,19 +131,15 @@ export function LoginForm() {
             <Input
               type="password"
               required
-              placeholder="Password"
+              placeholder={authType === "ldap" ? "Domain Password" : "Password"}
               className="pl-10 h-12 bg-slate-50 border-slate-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          {/* <div className="flex justify-end mt-1">
-             <a href="#" className="text-sm text-indigo-600 font-medium hover:text-indigo-700">Forgot Password?</a>
-          </div> */}
-
           {error && (
-            <div className="text-sm text-red-500 font-medium text-center bg-red-50 p-2 rounded-lg border border-red-100">
+            <div className="text-xs text-red-500 font-medium text-center bg-red-50 p-2.5 rounded-lg border border-red-100">
               {error}
             </div>
           )}

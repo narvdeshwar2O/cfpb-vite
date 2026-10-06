@@ -1,8 +1,11 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import bcrypt from "bcryptjs";
 import { signToken } from "./jwt.js";
+import { config } from "../config.js";
+import { authenticateLdap } from "./ldap.service.js";
 import {
   findActiveUserByUsername,
+  findOrCreateLdapUser,
   getAuthUserById,
   toAuthUserDto,
   touchLastLogin,
@@ -23,33 +26,76 @@ function asyncHandler(
 /**
  * POST /auth/login
  * Body: { username, password }
- * Verifies credentials against the database and returns a JWT plus the user's
- * roles, effective permissions, and assigned state.
+ * Verifies credentials via LDAP (if enabled) or local DB, and returns a JWT plus
+ * the user's roles, effective permissions, and assigned state.
  */
 authRouter.post(
   "/login",
   asyncHandler(async (req: Request, res: Response) => {
-    const { username, password } = req.body ?? {};
+    const { username, password, authType } = req.body ?? {};
 
     if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
       return res.status(400).json({ message: "username and password are required" });
     }
 
-    const user = await findActiveUserByUsername(username);
-    // Run a hash comparison even when the user is missing to avoid leaking which
-    // usernames exist via timing differences.
-    const hashToCheck =
-      user?.password_hash ?? "$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinv";
-    const ok = await bcrypt.compare(password, hashToCheck);
+    const type = authType === "ldap" ? "ldap" : "local";
+    let authenticatedUser = null;
 
-    if (!user || !ok) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    // ── 1. LDAP Authentication Mode ──
+    if (type === "ldap") {
+      const { getLdapConfig } = await import("../admin/ldap-config.repo.js");
+      const ldapConfig = await getLdapConfig();
+
+      if (!ldapConfig.enabled) {
+        return res.status(503).json({ message: "LDAP authentication is currently disabled" });
+      }
+
+      const ldapUser = await authenticateLdap(username.trim(), password);
+      if (ldapUser) {
+
+        // JIT provision or sync local database record with role mapping
+        const record = await findOrCreateLdapUser({
+          username: ldapUser.username,
+          fullName: ldapUser.fullName,
+          email: ldapUser.email,
+          state: ldapUser.state,
+          groups: ldapUser.groups,
+          defaultRole: ldapConfig.defaultRole,
+          groupRoleMappings: ldapConfig.groupRoleMappings,
+        });
+
+        if (record && record.is_active) {
+          authenticatedUser = record;
+        }
+      }
+
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: "Invalid LDAP / Domain credentials" });
+      }
+    } else {
+      // ── 2. Local Database Authentication Mode ──
+      const localUser = await findActiveUserByUsername(username.trim());
+      const hashToCheck =
+        localUser?.password_hash ?? "$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinv";
+      const ok = await bcrypt.compare(password, hashToCheck);
+
+      if (localUser && ok) {
+        authenticatedUser = localUser;
+      }
+
+      if (!authenticatedUser) {
+        return res.status(401).json({ message: "Invalid local credentials" });
+      }
     }
 
-    const dto = await toAuthUserDto(user);
-    await touchLastLogin(user.id);
+    const dto = await toAuthUserDto(authenticatedUser);
+    await touchLastLogin(authenticatedUser.id);
 
-    const token = signToken({ sub: user.id, username: user.username, roles: dto.roles });
+    const token = signToken({
+      sub: authenticatedUser.id,
+      username: authenticatedUser.username,
+      roles: dto.roles,
+    });
 
     return res.json({ token, user: dto });
   })

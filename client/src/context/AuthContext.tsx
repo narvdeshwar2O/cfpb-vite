@@ -19,7 +19,7 @@ interface AuthContextType {
   state: string | null;
   hasRole: (role: string) => boolean;
   hasPermission: (permission: string) => boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string, authType?: "local" | "ldap") => Promise<boolean>;
   logout: () => void;
 }
 
@@ -50,9 +50,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (
+    username: string,
+    password: string,
+    authType: "local" | "ldap" = "local"
+  ): Promise<boolean> => {
     try {
-      const { token, user: authUser } = await loginRequest(username, password);
+      const { token, user: authUser } = await loginRequest(username, password, authType);
       localStorage.setItem(TOKEN_KEY, token);
       localStorage.setItem(USER_KEY, JSON.stringify(authUser));
       setUser(authUser);

@@ -68,3 +68,91 @@ export async function getAuthUserById(userId: string): Promise<AuthUserDto | nul
 export async function touchLastLogin(userId: string): Promise<void> {
   await query(`UPDATE users SET last_login_at = now() WHERE id = $1`, [userId]);
 }
+
+/**
+ * Finds an existing user or creates a new one via JIT (Just-In-Time) provisioning
+ * upon successful LDAP authentication, synchronizing their role from group mappings or default role.
+ */
+export async function findOrCreateLdapUser(input: {
+  username: string;
+  fullName: string | null;
+  email: string | null;
+  state: string | null;
+  groups?: string[];
+  defaultRole?: string;
+  groupRoleMappings?: Array<{ groupName: string; roleName: string }>;
+}): Promise<UserRecord> {
+  // Determine assigned role based on group mappings or defaultRole
+  let targetRole = input.defaultRole || "STATE OPERATOR";
+  const userGroups = input.groups || [];
+  const mappings = input.groupRoleMappings || [];
+
+  if (mappings.length > 0 && userGroups.length > 0) {
+    // Check if user's memberOf groups match any configured mapping
+    const matchedRoles: string[] = [];
+    for (const m of mappings) {
+      const match = userGroups.some((g) => {
+        const cleanG = g.toLowerCase();
+        const cleanM = m.groupName.toLowerCase();
+        return cleanG === cleanM || cleanG.includes(`cn=${cleanM}`) || cleanG.includes(cleanM);
+      });
+      if (match) {
+        matchedRoles.push(m.roleName);
+      }
+    }
+    if (matchedRoles.length > 0) {
+      // Pick highest priority role among matches
+      const { getRolePriority } = await import("./constants.js");
+      matchedRoles.sort((a, b) => getRolePriority([b]) - getRolePriority([a]));
+      targetRole = matchedRoles[0];
+    }
+  }
+
+  // 1. Check if user already exists
+  const existing = await query<UserRecord>(
+    `SELECT id, username, email, password_hash, full_name, state, is_active
+       FROM users
+      WHERE username = $1
+      LIMIT 1`,
+    [input.username]
+  );
+
+  let user: UserRecord;
+
+  if (existing.rows[0]) {
+    user = existing.rows[0];
+    await query(
+      `UPDATE users
+          SET full_name = COALESCE($1, full_name),
+              email = COALESCE($2, email),
+              state = COALESCE($3, state),
+              last_login_at = now(),
+              updated_at = now()
+        WHERE id = $4`,
+      [input.fullName, input.email, input.state, user.id]
+    );
+  } else {
+    // 2. Insert new domain user with dummy hashed password (LDAP authenticates password)
+    const dummyHash = "$2a$10$LDAP.MANAGED.ACCOUNT.NO.LOCAL.PASSWORD.ALLOWED00000000000000";
+    const inserted = await query<UserRecord>(
+      `INSERT INTO users (username, password_hash, full_name, email, state, is_active, last_login_at)
+       VALUES ($1, $2, $3, $4, $5, TRUE, now())
+       RETURNING id, username, email, password_hash, full_name, state, is_active`,
+      [input.username, dummyHash, input.fullName, input.email, input.state]
+    );
+    user = inserted.rows[0];
+  }
+
+  // 3. Ensure user has a role assigned in model_has_roles
+  const roleCheck = await query(
+    `SELECT 1 FROM model_has_roles WHERE model_id = $1 AND model_type = 'App\\Models\\User' LIMIT 1`,
+    [user.id]
+  );
+  if (roleCheck.rowCount === 0 && targetRole) {
+    const { syncUserRoles } = await import("../admin/admin.repo.js");
+    await syncUserRoles(user.id, [targetRole]);
+  }
+
+  return user;
+}
+

@@ -157,3 +157,40 @@ export async function updateRolePermissions(
     body: JSON.stringify({ permissions }),
   });
 }
+
+export interface LdapConfig {
+  enabled: boolean;
+  serverUrl: string;
+  baseDn: string;
+  bindDn: string;
+  bindPassword?: string;
+  searchFilter: string;
+  defaultRole: string;
+  useTls: boolean;
+  groupRoleMappings: Array<{ groupName: string; roleName: string }>;
+}
+
+export async function fetchLdapConfig(): Promise<LdapConfig> {
+  const data = await request<{ config: LdapConfig }>("/admin/ldap-config");
+  return data.config;
+}
+
+export async function saveLdapConfig(cfg: LdapConfig): Promise<void> {
+  await request("/admin/ldap-config", {
+    method: "PUT",
+    body: JSON.stringify(cfg),
+  });
+}
+
+export async function testLdapConnection(params: {
+  serverUrl: string;
+  bindDn: string;
+  bindPassword?: string;
+  baseDn: string;
+}): Promise<{ ok: boolean; message: string }> {
+  return request<{ ok: boolean; message: string }>("/admin/ldap-config/test", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+

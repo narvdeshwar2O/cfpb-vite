@@ -17,12 +17,13 @@ export interface LoginResponse {
 
 export async function loginRequest(
   username: string,
-  password: string
+  password: string,
+  authType: "local" | "ldap" = "local"
 ): Promise<LoginResponse> {
   const res = await fetch(`${AUTH_BASE_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, authType }),
   });
 
   if (!res.ok) {
