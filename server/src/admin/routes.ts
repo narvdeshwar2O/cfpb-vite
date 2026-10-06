@@ -490,8 +490,20 @@ adminRouter.put(
     if (!access.isSuperAdmin) {
       return res.status(403).json({ message: "Only Super Admins can update LDAP configuration" });
     }
+    const b = req.body ?? {};
+    const normalized = {
+      enabled: b.enabled ?? false,
+      serverUrl: b.server_url ?? b.serverUrl ?? "",
+      baseDn: b.base_dn ?? b.baseDn ?? "",
+      bindDn: b.bind_dn ?? b.bindDn ?? "",
+      bindPassword: b.bind_password ?? b.bindPassword,
+      searchFilter: b.user_search_filter ?? b.searchFilter ?? "(|(sAMAccountName={username})(uid={username}))",
+      defaultRole: b.default_role ?? b.defaultRole ?? "STATE OPERATOR",
+      useTls: b.use_tls ?? b.useTls ?? true,
+      groupRoleMappings: b.group_role_mapping ?? b.groupRoleMappings ?? [],
+    };
     const { saveLdapConfig } = await import("./ldap-config.repo.js");
-    await saveLdapConfig(req.body);
+    await saveLdapConfig(normalized);
     return res.json({ ok: true });
   })
 );
@@ -504,7 +516,11 @@ adminRouter.post(
       return res.status(403).json({ message: "Only Super Admins can test LDAP configuration" });
     }
     const { testLdapConnection } = await import("../auth/ldap.service.js");
-    let { serverUrl, bindDn, bindPassword, baseDn } = req.body ?? {};
+    const b = req.body ?? {};
+    let serverUrl = b.server_url ?? b.serverUrl ?? "";
+    let bindDn = b.bind_dn ?? b.bindDn ?? "";
+    let bindPassword = b.bind_password ?? b.bindPassword;
+    let baseDn = b.base_dn ?? b.baseDn ?? "";
     
     // If password wasn't typed or is masked, retrieve existing stored password
     if (!bindPassword || bindPassword === "••••••••••••") {

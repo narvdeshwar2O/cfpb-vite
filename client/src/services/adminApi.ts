@@ -176,9 +176,21 @@ export async function fetchLdapConfig(): Promise<LdapConfig> {
 }
 
 export async function saveLdapConfig(cfg: LdapConfig): Promise<void> {
+  const payload = {
+    enabled: cfg.enabled,
+    server_url: cfg.serverUrl,
+    base_dn: cfg.baseDn,
+    bind_dn: cfg.bindDn,
+    bind_password: cfg.bindPassword,
+    default_role: cfg.defaultRole,
+    use_tls: cfg.useTls,
+    user_search_filter: cfg.searchFilter,
+    group_role_mapping: cfg.groupRoleMappings || [],
+    attribute_mapping: {},
+  };
   await request("/admin/ldap-config", {
     method: "PUT",
-    body: JSON.stringify(cfg),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -188,9 +200,16 @@ export async function testLdapConnection(params: {
   bindPassword?: string;
   baseDn: string;
 }): Promise<{ ok: boolean; message: string }> {
+  const payload = {
+    server_url: params.serverUrl,
+    base_dn: params.baseDn,
+    bind_dn: params.bindDn,
+    bind_password: params.bindPassword,
+    use_tls: params.serverUrl.startsWith("ldaps://"),
+  };
   return request<{ ok: boolean; message: string }>("/admin/ldap-config/test", {
     method: "POST",
-    body: JSON.stringify(params),
+    body: JSON.stringify(payload),
   });
 }
 
