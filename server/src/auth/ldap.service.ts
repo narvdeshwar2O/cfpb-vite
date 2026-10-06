@@ -15,25 +15,39 @@ export async function testLdapConnection(params: {
   bindDn: string;
   bindPassword?: string;
   baseDn: string;
-}): Promise<{ ok: boolean; message: string }> {
+}): Promise<{ ok: boolean; message: string; namingContexts?: string[] }> {
+  const isLdaps = params.serverUrl.startsWith("ldaps://");
   const client = new Client({
     url: params.serverUrl,
-    timeout: 5000,
-    connectTimeout: 5000,
+    timeout: 10000,
+    connectTimeout: 10000,
     strictDN: false,
+    tlsOptions: isLdaps ? { rejectUnauthorized: false } : undefined,
   });
 
   try {
     if (params.bindDn && params.bindPassword) {
       await client.bind(params.bindDn, params.bindPassword);
     }
-    // Perform a test root ping search
-    await client.search(params.baseDn || "", {
+    // Query root DSE for namingContexts
+    const rootDse = await client.search("", {
       scope: "base",
       filter: "(objectClass=*)",
-      attributes: ["dn"],
+      attributes: ["namingContexts", "defaultNamingContext"],
     });
-    return { ok: true, message: "Successfully connected and bound to LDAP directory" };
+
+    let contexts: string[] = [];
+    if (rootDse.searchEntries.length > 0) {
+      const raw = rootDse.searchEntries[0].namingContexts;
+      if (Array.isArray(raw)) contexts = raw.map(String);
+      else if (raw) contexts = [String(raw)];
+    }
+
+    return {
+      ok: true,
+      message: "Successfully connected and bound to LDAP directory",
+      namingContexts: contexts,
+    };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     return { ok: false, message: `LDAP Connection failed: ${errorMsg}` };
@@ -54,11 +68,15 @@ export async function authenticateLdap(
     return null;
   }
 
+  const isLdaps = ldapSettings.serverUrl.startsWith("ldaps://");
+  const tlsOptions = isLdaps ? { rejectUnauthorized: false } : undefined;
+
   const client = new Client({
     url: ldapSettings.serverUrl,
-    timeout: 5000,
-    connectTimeout: 5000,
+    timeout: 10000,
+    connectTimeout: 10000,
     strictDN: false,
+    tlsOptions,
   });
 
   try {
@@ -111,9 +129,10 @@ export async function authenticateLdap(
 
     const userClient = new Client({
       url: ldapSettings.serverUrl,
-      timeout: 5000,
-      connectTimeout: 5000,
+      timeout: 10000,
+      connectTimeout: 10000,
       strictDN: false,
+      tlsOptions,
     });
 
     try {
