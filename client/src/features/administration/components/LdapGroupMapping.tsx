@@ -10,17 +10,15 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-import { type AdminRole } from "@/services/adminApi";
 
 interface Props {
   mappings: Array<{ groupName: string; roleName: string }>;
-  availableRoles: AdminRole[];
   onChange: (mappings: Array<{ groupName: string; roleName: string }>) => void;
 }
 
-export const LdapGroupMapping: React.FC<Props> = ({ mappings, availableRoles, onChange }) => {
+export const LdapGroupMapping: React.FC<Props> = ({ mappings, onChange }) => {
   const [newGroup, setNewGroup] = useState("");
-  const [newRole, setNewRole] = useState(availableRoles[0]?.name || "STATE OPERATOR");
+  const [newRole, setNewRole] = useState("viewer");
 
   const handleAdd = () => {
     const trimmed = newGroup.trim();
@@ -91,8 +89,8 @@ export const LdapGroupMapping: React.FC<Props> = ({ mappings, availableRoles, on
               <SelectValue placeholder="Select Role" />
             </SelectTrigger>
             <SelectContent>
-              {availableRoles.map((r) => (
-                <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+              {["Viewer", "Analyst", "Editor", "Admin"].map((r) => (
+                <SelectItem key={r} value={r.toLowerCase()}>{r}</SelectItem>
               ))}
             </SelectContent>
           </Select>

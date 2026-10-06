@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { CheckCircle2, AlertCircle, Save, Radio, Server } from "lucide-react";
-import { fetchLdapConfig, saveLdapConfig, testLdapConnection, listRoles, type LdapConfig, type AdminRole } from "@/services/adminApi";
+import { fetchLdapConfig, saveLdapConfig, testLdapConnection, type LdapConfig } from "@/services/adminApi";
 import { LdapConnectionForm } from "@/features/administration/components/LdapConnectionForm";
 import { LdapGroupMapping } from "@/features/administration/components/LdapGroupMapping";
 
@@ -12,7 +12,6 @@ export const AdminLdap: React.FC = () => {
     enabled: false, serverUrl: "", baseDn: "", bindDn: "", bindPassword: "",
     searchFilter: "(|(sAMAccountName={username})(uid={username}))", defaultRole: "STATE OPERATOR", useTls: true, groupRoleMappings: [],
   });
-  const [availableRoles, setAvailableRoles] = useState<AdminRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -20,8 +19,8 @@ export const AdminLdap: React.FC = () => {
   const enabledId = useId();
 
   useEffect(() => {
-    Promise.all([fetchLdapConfig(), listRoles()])
-      .then(([ldap, roles]) => { setConfig(ldap); setAvailableRoles(roles); })
+    fetchLdapConfig()
+      .then((ldap) => setConfig(ldap))
       .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load LDAP settings"))
       .finally(() => setLoading(false));
   }, []);
@@ -43,8 +42,10 @@ export const AdminLdap: React.FC = () => {
     setTestResult(null);
     try {
       const res = await testLdapConnection({
+        enabled: config.enabled,
         serverUrl: config.serverUrl, bindDn: config.bindDn, baseDn: config.baseDn,
         bindPassword: config.bindPassword === "••••••••••••" ? undefined : config.bindPassword,
+        searchFilter: config.searchFilter, defaultRole: config.defaultRole, useTls: config.useTls,
       });
       setTestResult(res);
       if (res.ok) { toast.success(res.message); } else { toast.error(res.message); }
@@ -73,8 +74,8 @@ export const AdminLdap: React.FC = () => {
           </label>
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
-          <LdapConnectionForm config={config} availableRoles={availableRoles} onChange={(k, v) => setConfig((p) => ({ ...p, [k]: v }))} />
-          <LdapGroupMapping mappings={config.groupRoleMappings} availableRoles={availableRoles} onChange={(m) => setConfig((p) => ({ ...p, groupRoleMappings: m }))} />
+          <LdapConnectionForm config={config} onChange={(k, v) => setConfig((p) => ({ ...p, [k]: v }))} />
+          <LdapGroupMapping mappings={config.groupRoleMappings} onChange={(m) => setConfig((p) => ({ ...p, groupRoleMappings: m }))} />
           {testResult && (
             <div className={`flex items-center gap-2 p-3 rounded-lg text-xs font-medium border ${testResult.ok ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-red-50 text-red-800 border-red-200"}`}>
               {testResult.ok ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" /> : <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />}

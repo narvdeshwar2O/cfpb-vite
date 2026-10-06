@@ -195,17 +195,26 @@ export async function saveLdapConfig(cfg: LdapConfig): Promise<void> {
 }
 
 export async function testLdapConnection(params: {
+  enabled?: boolean;
   serverUrl: string;
   bindDn: string;
   bindPassword?: string;
   baseDn: string;
+  searchFilter?: string;
+  defaultRole?: string;
+  useTls?: boolean;
 }): Promise<{ ok: boolean; message: string }> {
   const payload = {
+    enabled: params.enabled ?? false,
     server_url: params.serverUrl,
     base_dn: params.baseDn,
     bind_dn: params.bindDn,
     bind_password: params.bindPassword,
-    use_tls: params.serverUrl.startsWith("ldaps://"),
+    default_role: params.defaultRole || "viewer",
+    use_tls: params.useTls ?? params.serverUrl.startsWith("ldaps://"),
+    user_search_filter: params.searchFilter || "{username}",
+    group_role_mapping: {},
+    attribute_mapping: {},
   };
   return request<{ ok: boolean; message: string }>("/admin/ldap-config/test", {
     method: "POST",

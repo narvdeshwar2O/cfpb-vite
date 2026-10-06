@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type LdapConfig, type AdminRole } from "@/services/adminApi";
+import { type LdapConfig } from "@/services/adminApi";
 
 interface FieldConfig {
   key: keyof Omit<LdapConfig, "enabled" | "useTls" | "groupRoleMappings">;
@@ -54,11 +54,10 @@ const LDAP_FIELDS: FieldConfig[] = [
 
 interface Props {
   config: LdapConfig;
-  availableRoles: AdminRole[];
   onChange: <K extends keyof LdapConfig>(key: K, value: LdapConfig[K]) => void;
 }
 
-export const LdapConnectionForm: React.FC<Props> = ({ config, availableRoles, onChange }) => {
+export const LdapConnectionForm: React.FC<Props> = ({ config, onChange }) => {
   const useTlsId = useId();
 
   return (
@@ -87,8 +86,8 @@ export const LdapConnectionForm: React.FC<Props> = ({ config, availableRoles, on
               <SelectValue placeholder="Select Default Role" />
             </SelectTrigger>
             <SelectContent>
-              {availableRoles.map((r) => (
-                <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>
+              {["Viewer", "Analyst", "Editor", "Admin"].map((r) => (
+                <SelectItem key={r} value={r.toLowerCase()}>{r}</SelectItem>
               ))}
             </SelectContent>
           </Select>
