@@ -35,7 +35,7 @@ export function MiddleMetricsRow() {
       {/* 2. Slip Capture (TPTP vs TPUL) - BLUE */}
       <DualSubSectionCard
         leftSection={{
-          title: "TPTP (Slip)",
+          title: "TPTP",
           hit: formatNum("tp_hit"),
           noHit: formatNum("tp_nohit"),
         }}
@@ -51,7 +51,7 @@ export function MiddleMetricsRow() {
       {/* 3. Live Enrollment (TPTP vs TPUL) - EMERALD */}
       <DualSubSectionCard
         leftSection={{
-          title: "TPTP (Live)",
+          title: "TPTP",
           hit: formatNum("live_hit"),
           noHit: formatNum("live_nohit"),
         }}
