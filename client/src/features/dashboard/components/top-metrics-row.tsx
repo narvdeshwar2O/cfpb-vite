@@ -18,7 +18,7 @@ export function TopMetricsRow() {
             )
           }
           indicatorColor={metric.color}
-          className="h-22.5"
+          className="h-28"
         />
       ))}
     </div>

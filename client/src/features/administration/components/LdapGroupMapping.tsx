@@ -13,12 +13,14 @@ import { toast } from "@/components/ui/sonner";
 
 interface Props {
   mappings: Array<{ groupName: string; roleName: string }>;
+  roles?: string[];
   onChange: (mappings: Array<{ groupName: string; roleName: string }>) => void;
 }
 
-export const LdapGroupMapping: React.FC<Props> = ({ mappings, onChange }) => {
+export const LdapGroupMapping: React.FC<Props> = ({ mappings, roles = [], onChange }) => {
+  const availableRoles = roles.length > 0 ? roles : ["Viewer", "Analyst", "Editor", "Admin"];
   const [newGroup, setNewGroup] = useState("");
-  const [newRole, setNewRole] = useState("viewer");
+  const [newRole, setNewRole] = useState(availableRoles[0] || "Viewer");
 
   const handleAdd = () => {
     const trimmed = newGroup.trim();
@@ -89,8 +91,8 @@ export const LdapGroupMapping: React.FC<Props> = ({ mappings, onChange }) => {
               <SelectValue placeholder="Select Role" />
             </SelectTrigger>
             <SelectContent>
-              {["Viewer", "Analyst", "Editor", "Admin"].map((r) => (
-                <SelectItem key={r} value={r.toLowerCase()}>{r}</SelectItem>
+              {availableRoles.map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
               ))}
             </SelectContent>
           </Select>

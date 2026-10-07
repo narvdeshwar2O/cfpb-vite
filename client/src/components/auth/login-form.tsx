@@ -3,17 +3,28 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { useNavigate } from "react-router-dom"
 import { Mail, Lock } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { ROUTES } from "@/shared/constants/routes"
+import { fetchAuthConfig } from "@/services/authApi"
 
 export function LoginForm() {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const [ldapEnabled, setLdapEnabled] = useState(false)
   const [authType, setAuthType] = useState<"local" | "ldap">("local")
   const [email, setEmail] = useState("admin")
   const [password, setPassword] = useState("admin")
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    fetchAuthConfig().then((cfg) => {
+      setLdapEnabled(cfg.ldapEnabled)
+      if (!cfg.ldapEnabled) {
+        setAuthType("local")
+      }
+    })
+  }, [])
 
   const [isLoading, setIsLoading] = useState(false)
 
@@ -84,37 +95,39 @@ export function LoginForm() {
 
       <form onSubmit={handleLogin}>
         <CardContent className="flex flex-col gap-4 pt-6 pb-6 px-10">
-          {/* Authentication Type Toggle */}
-          <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthType("local")
-                setError("")
-              }}
-              className={`py-2 rounded-lg transition-all ${
-                authType === "local"
-                  ? "bg-white text-indigo-600 shadow-sm"
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
-            >
-              Local Account
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthType("ldap")
-                setError("")
-              }}
-              className={`py-2 rounded-lg transition-all ${
-                authType === "ldap"
-                  ? "bg-white text-indigo-600 shadow-sm"
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
-            >
-              LDAP / Domain
-            </button>
-          </div>
+          {/* Authentication Type Toggle - Only visible if LDAP is enabled */}
+          {ldapEnabled && (
+            <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthType("local")
+                  setError("")
+                }}
+                className={`py-2 rounded-lg transition-all ${
+                  authType === "local"
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                Local Account
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthType("ldap")
+                  setError("")
+                }}
+                className={`py-2 rounded-lg transition-all ${
+                  authType === "ldap"
+                    ? "bg-white text-indigo-600 shadow-sm"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                LDAP / Domain
+              </button>
+            </div>
+          )}
 
           <div className="relative">
             <Mail className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />

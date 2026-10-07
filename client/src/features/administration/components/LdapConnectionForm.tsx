@@ -54,11 +54,13 @@ const LDAP_FIELDS: FieldConfig[] = [
 
 interface Props {
   config: LdapConfig;
+  roles?: string[];
   onChange: <K extends keyof LdapConfig>(key: K, value: LdapConfig[K]) => void;
 }
 
-export const LdapConnectionForm: React.FC<Props> = ({ config, onChange }) => {
+export const LdapConnectionForm: React.FC<Props> = ({ config, roles = [], onChange }) => {
   const useTlsId = useId();
+  const availableRoles = roles.length > 0 ? roles : ["Viewer", "Analyst", "Editor", "Admin"];
 
   return (
     <>
@@ -86,8 +88,8 @@ export const LdapConnectionForm: React.FC<Props> = ({ config, onChange }) => {
               <SelectValue placeholder="Select Default Role" />
             </SelectTrigger>
             <SelectContent>
-              {["Viewer", "Analyst", "Editor", "Admin"].map((r) => (
-                <SelectItem key={r} value={r.toLowerCase()}>{r}</SelectItem>
+              {availableRoles.map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
               ))}
             </SelectContent>
           </Select>

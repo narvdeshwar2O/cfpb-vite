@@ -1,7 +1,7 @@
 "use client";
 
 import { StatCard } from "./stat-card";
-import { SplitStatCard } from "./split-stat-card";
+import { DualSubSectionCard } from "./dual-sub-section-card";
 import { useEnrollData } from "@/features/dashboard/hooks/use-dashboard";
 import { useFilters } from "@/app/providers/filter-provider";
 
@@ -30,39 +30,54 @@ export function MiddleMetricsRow() {
   return (
     <div className="grid grid-cols-4 gap-3">
       {/* 1. Total Active Users - NEUTRAL (Dummy for now) */}
-      <StatCard label="Total Nafis Users" value="3,850" className="h-22.5" />
+      <StatCard label="Total Nafis Users" value="3,850" className="h-28" />
 
-      {/* 2. Slip Capture (Ten Print) - BLUE */}
-      <SplitStatCard
-        stats={[
-          { label: "Total Hit", value: formatNum("tp_hit") },
-          { label: "Total No Hit", value: formatNum("tp_nohit") },
-          { label: "Delta", value: "0" },
-        ]}
+      {/* 2. Slip Capture (TPTP vs TPUL) - BLUE */}
+      <DualSubSectionCard
+        leftSection={{
+          title: "TPTP (Slip)",
+          hit: formatNum("tp_hit"),
+          noHit: formatNum("tp_nohit"),
+        }}
+        rightSection={{
+          title: "TPUL",
+          hit: 0,
+          noHit: 0,
+        }}
         indicatorColor="blue"
-        className="h-22.5"
+        className="h-28"
       />
 
-      {/* 3. Live Enrollment - EMERALD */}
-      <SplitStatCard
-        stats={[
-          { label: "Total Hit", value: formatNum("live_hit") },
-          { label: "Total No Hit", value: formatNum("live_nohit") },
-          { label: "Delta", value: "0" },
-        ]}
+      {/* 3. Live Enrollment (TPTP vs TPUL) - EMERALD */}
+      <DualSubSectionCard
+        leftSection={{
+          title: "TPTP (Live)",
+          hit: formatNum("live_hit"),
+          noHit: formatNum("live_nohit"),
+        }}
+        rightSection={{
+          title: "TPUL",
+          hit: 0,
+          noHit: 0,
+        }}
         indicatorColor="emerald"
-        className="h-22.5"
+        className="h-28"
       />
 
-      {/* 4. Chance Print (Latent) - VIOLET */}
-      <SplitStatCard
-        stats={[
-          { label: "Total Hit", value: formatNum("lt_hit") },
-          { label: "Total No Hit", value: formatNum("lt_nohit") },
-          { label: "Delta", value: "0" },
-        ]}
+      {/* 4. Chance Print (LT-TP vs LT-PALM) - VIOLET */}
+      <DualSubSectionCard
+        leftSection={{
+          title: "LT-TP",
+          hit: formatNum("lt_hit"),
+          noHit: formatNum("lt_nohit"),
+        }}
+        rightSection={{
+          title: "LT-PALM",
+          hit: 0,
+          noHit: 0,
+        }}
         indicatorColor="violet"
-        className="h-22.5"
+        className="h-28"
       />
     </div>
   );

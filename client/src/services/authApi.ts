@@ -46,3 +46,13 @@ export async function fetchMe(token: string): Promise<AuthUser> {
   const body = (await res.json()) as { user: AuthUser };
   return body.user;
 }
+
+export async function fetchAuthConfig(): Promise<{ ldapEnabled: boolean }> {
+  try {
+    const res = await fetch(`${AUTH_BASE_URL}/auth/config`);
+    if (!res.ok) return { ldapEnabled: false };
+    return await res.json();
+  } catch {
+    return { ldapEnabled: false };
+  }
+}
