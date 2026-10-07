@@ -42,6 +42,46 @@ app.use(
 );
 app.use(express.json());
 
+// Global response sanitizer: ensures passwords/credentials never leak in any response body
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  const originalJson = res.json.bind(res);
+  const sensitiveKeys = new Set([
+    "bindpassword",
+    "bind_password",
+    "password",
+    "password_hash",
+    "passwordhash",
+    "client_secret",
+    "clientsecret",
+  ]);
+
+  function sanitize(obj: any): any {
+    if (obj === null || obj === undefined) return obj;
+    if (Array.isArray(obj)) return obj.map(sanitize);
+    if (typeof obj === "object") {
+      const cleaned: Record<string, any> = {};
+      for (const [k, v] of Object.entries(obj)) {
+        const lowerK = k.toLowerCase().replace(/[-_]/g, "");
+        if (sensitiveKeys.has(lowerK) || sensitiveKeys.has(k.toLowerCase())) {
+          // Redact completely or mask
+          cleaned[k] = "••••••••••••";
+        } else if (typeof v === "object") {
+          cleaned[k] = sanitize(v);
+        } else {
+          cleaned[k] = v;
+        }
+      }
+      return cleaned;
+    }
+    return obj;
+  }
+
+  res.json = (body: any) => {
+    return originalJson(sanitize(body));
+  };
+  next();
+});
+
 // Liveness + DB connectivity check.
 app.get("/health", async (_req: Request, res: Response) => {
   try {
