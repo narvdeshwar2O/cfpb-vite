@@ -24,6 +24,19 @@ function asyncHandler(
 }
 
 /**
+ * GET /auth/config
+ * Public endpoint returning system auth configuration (e.g. if LDAP is enabled).
+ */
+authRouter.get(
+  "/config",
+  asyncHandler(async (_req: Request, res: Response) => {
+    const { getLdapConfig } = await import("../admin/ldap-config.repo.js");
+    const ldapConfig = await getLdapConfig();
+    return res.json({ ldapEnabled: !!ldapConfig.enabled });
+  })
+);
+
+/**
  * POST /auth/login
  * Body: { username, password }
  * Verifies credentials via LDAP (if enabled) or local DB, and returns a JWT plus

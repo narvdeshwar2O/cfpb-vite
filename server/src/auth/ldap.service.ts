@@ -86,7 +86,15 @@ export async function authenticateLdap(
     }
 
     // Step 2: Search for user entry
-    const sanitizedUsername = username.replace(/[\\*()]/g, "");
+    // Normalize username: strip DOMAIN\ or @domain if user typed it
+    let cleanUsername = username.trim();
+    if (cleanUsername.includes("\\")) {
+      cleanUsername = cleanUsername.split("\\").pop() || cleanUsername;
+    } else if (cleanUsername.includes("@")) {
+      cleanUsername = cleanUsername.split("@")[0] || cleanUsername;
+    }
+
+    const sanitizedUsername = cleanUsername.replace(/[\\*()]/g, "");
     let filter = ldapSettings.searchFilter;
     if (filter.includes("{username}")) {
       filter = filter.replace(/\{username\}/g, sanitizedUsername);
