@@ -1,3 +1,5 @@
 *.tar.*
 *.sql
 *.py
+.DS_Store
+.env
