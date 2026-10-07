@@ -24,14 +24,14 @@ export interface AuthUserDto {
 
 /** Looks up an active user by username, including the password hash for verification. */
 export async function findActiveUserByUsername(
-  username: string
+  username: string,
 ): Promise<UserRecord | null> {
   const result = await query<UserRecord>(
     `SELECT id, username, email, password_hash, full_name, state, is_active
        FROM users
       WHERE username = $1 AND is_active = TRUE
       LIMIT 1`,
-    [username]
+    [username],
   );
   return result.rows[0] ?? null;
 }
@@ -51,13 +51,15 @@ export async function toAuthUserDto(user: UserRecord): Promise<AuthUserDto> {
 }
 
 /** Loads a user plus roles/permissions for the /auth/me endpoint. */
-export async function getAuthUserById(userId: string): Promise<AuthUserDto | null> {
+export async function getAuthUserById(
+  userId: string,
+): Promise<AuthUserDto | null> {
   const result = await query<UserRecord>(
     `SELECT id, username, email, password_hash, full_name, state, is_active
        FROM users
       WHERE id = $1 AND is_active = TRUE
       LIMIT 1`,
-    [userId]
+    [userId],
   );
   const user = result.rows[0];
   if (!user) return null;
@@ -82,9 +84,73 @@ export async function findOrCreateLdapUser(input: {
   defaultRole?: string;
   groupRoleMappings?: Array<{ groupName: string; roleName: string }>;
 }): Promise<UserRecord> {
+  const userGroups = input.groups || [];
+
+  // --- 1. STATE EXTRACTOR ---
+  const VALID_STATES = [
+    "andaman and nicobar",
+    "andhra pradesh",
+    "arunachal pradesh",
+    "assam",
+    "bihar",
+    "cbi",
+    "chandigarh",
+    "chhattisgarh",
+    "dadra and nagar haveli",
+    "daman diu",
+    "delhi",
+    "goa",
+    "gujarat",
+    "haryana",
+    "himachal pradesh",
+    "intelligence bureau",
+    "jammu and kashmir",
+    "jharkhand",
+    "karnataka",
+    "kerala",
+    "ladakh",
+    "lakshadweep",
+    "madhya pradesh",
+    "maharashtra",
+    "manipur",
+    "meghalaya",
+    "mizoram",
+    "nagaland",
+    "ncb",
+    "nia",
+    "odisha",
+    "puducherry",
+    "punjab",
+    "rajasthan",
+    "sikkim",
+    "tamil nadu",
+    "telangana",
+    "tripura",
+    "uttar pradesh",
+    "uttarakhand",
+    "west bengal",
+  ];
+
+  let extractedState = input.state;
+  if (userGroups.length > 0) {
+    for (const g of userGroups) {
+      const cleanG = g.toLowerCase();
+      const foundState = VALID_STATES.find(
+        (s) =>
+          cleanG === s ||
+          cleanG.includes(`cn=${s},`) ||
+          cleanG.includes(`cn=${s}`),
+      );
+      if (foundState) {
+        extractedState = foundState;
+        break;
+      }
+    }
+  }
+  input.state = extractedState;
+
   // Determine assigned role based on group mappings or defaultRole
   let targetRole = input.defaultRole || "STATE OPERATOR";
-  const userGroups = input.groups || [];
   const mappings = input.groupRoleMappings || [];
 
   if (mappings.length > 0 && userGroups.length > 0) {
@@ -94,7 +160,11 @@ export async function findOrCreateLdapUser(input: {
       const match = userGroups.some((g) => {
         const cleanG = g.toLowerCase();
         const cleanM = m.groupName.toLowerCase();
-        return cleanG === cleanM || cleanG.includes(`cn=${cleanM}`) || cleanG.includes(cleanM);
+        return (
+          cleanG === cleanM ||
+          cleanG.includes(`cn=${cleanM}`) ||
+          cleanG.includes(cleanM)
+        );
       });
       if (match) {
         matchedRoles.push(m.roleName);
@@ -114,7 +184,7 @@ export async function findOrCreateLdapUser(input: {
        FROM users
       WHERE username = $1
       LIMIT 1`,
-    [input.username]
+    [input.username],
   );
 
   let user: UserRecord;
@@ -129,30 +199,26 @@ export async function findOrCreateLdapUser(input: {
               last_login_at = now(),
               updated_at = now()
         WHERE id = $4`,
-      [input.fullName, input.email, input.state, user.id]
+      [input.fullName, input.email, input.state, user.id],
     );
   } else {
     // 2. Insert new domain user with dummy hashed password (LDAP authenticates password)
-    const dummyHash = "$2a$10$LDAP.MANAGED.ACCOUNT.NO.LOCAL.PASSWORD.ALLOWED00000000000000";
+    const dummyHash =
+      "$2a$10$LDAP.MANAGED.ACCOUNT.NO.LOCAL.PASSWORD.ALLOWED00000000000000";
     const inserted = await query<UserRecord>(
       `INSERT INTO users (username, password_hash, full_name, email, state, is_active, last_login_at)
        VALUES ($1, $2, $3, $4, $5, TRUE, now())
        RETURNING id, username, email, password_hash, full_name, state, is_active`,
-      [input.username, dummyHash, input.fullName, input.email, input.state]
+      [input.username, dummyHash, input.fullName, input.email, input.state],
     );
     user = inserted.rows[0];
   }
 
-  // 3. Ensure user has a role assigned in model_has_roles
-  const roleCheck = await query(
-    `SELECT 1 FROM model_has_roles WHERE model_id = $1 AND model_type = 'App\\Models\\User' LIMIT 1`,
-    [user.id]
-  );
-  if (roleCheck.rowCount === 0 && targetRole) {
+  // 3. Sync user role to match AD exactly on every login
+  if (targetRole) {
     const { syncUserRoles } = await import("../admin/admin.repo.js");
     await syncUserRoles(user.id, [targetRole]);
   }
 
   return user;
 }
-
