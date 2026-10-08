@@ -463,6 +463,31 @@ adminRouter.put(
   })
 );
 
+adminRouter.delete(
+  "/users/:id",
+  requirePermission("users.manage"),
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const caller = await getCallerContext(req);
+    if (!caller.isSuper) {
+      return res.status(403).json({ message: "Only Super Admins can permanently delete users" });
+    }
+
+    const { id } = req.params;
+
+    if (req.user!.sub === id) {
+      return res.status(403).json({ message: "You cannot delete your own account" });
+    }
+
+    const targetUser = await repo.getUserById(id);
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    await repo.deleteUser(id);
+    return res.json({ ok: true });
+  })
+);
+
 // ── LDAP / Active Directory Integration (SUPER ADMIN ONLY) ──────────────────
 adminRouter.get(
   "/ldap-config",

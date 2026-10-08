@@ -12,16 +12,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/sonner";
-import { Pencil, ShieldCheck } from "lucide-react";
+import { Pencil, ShieldCheck, Plus, RefreshCw } from "lucide-react";
 import {
   listPermissions,
   listRoles,
   type AdminRole,
 } from "@/services/adminApi";
 import { RoleFormDialog } from "./RoleFormDialog";
+import { useAuth } from "@/context/AuthContext";
 
 /** Admin page: list roles, create them, and edit their permission sets. */
 const AdminRoles: React.FC = () => {
+  const { isSuperAdmin } = useAuth();
   const [roles, setRoles] = useState<AdminRole[]>([]);
   const [permissionOptions, setPermissionOptions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,12 +52,10 @@ const AdminRoles: React.FC = () => {
     load();
   }, [load]);
 
-  /*
   const openCreate = () => {
     setEditingRole(null);
     setDialogOpen(true);
   };
-  */
 
   const openEdit = (role: AdminRole) => {
     setEditingRole(role);
@@ -70,18 +70,18 @@ const AdminRoles: React.FC = () => {
             <ShieldCheck className="h-5 w-5 text-blue-600" />
             Roles &amp; Permissions
           </CardTitle>
-          {/* Commented out Refresh and Add Role buttons
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </Button>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Role
-            </Button>
+            {isSuperAdmin && (
+              <Button size="sm" onClick={openCreate} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Role
+              </Button>
+            )}
           </div>
-          */}
         </CardHeader>
         <CardContent>
           {error && (

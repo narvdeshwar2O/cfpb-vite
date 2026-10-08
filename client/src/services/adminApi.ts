@@ -109,6 +109,13 @@ export async function setUserActive(userId: string, isActive: boolean): Promise<
   });
 }
 
+export async function deleteUser(userId: string): Promise<void> {
+  await request(`/admin/users/${userId}`, {
+    method: "DELETE",
+  });
+}
+
+
 export async function resetUserPassword(userId: string, password: string): Promise<void> {
   await request(`/admin/users/${userId}/password`, {
     method: "PUT",

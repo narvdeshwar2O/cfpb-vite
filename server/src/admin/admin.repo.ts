@@ -288,3 +288,27 @@ export async function getUserById(userId: string): Promise<AdminUserDto | null> 
   };
 }
 
+/** Permanently deletes a user and associated roles/permissions. */
+export async function deleteUser(userId: string): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `DELETE FROM model_has_roles WHERE model_id = $1 AND model_type = $2`,
+      [userId, MODEL_TYPE]
+    );
+    await client.query(
+      `DELETE FROM model_has_permissions WHERE model_id = $1 AND model_type = $2`,
+      [userId, MODEL_TYPE]
+    );
+    await client.query(`DELETE FROM users WHERE id = $1`, [userId]);
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+
