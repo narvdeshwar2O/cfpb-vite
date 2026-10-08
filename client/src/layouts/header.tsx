@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { NAV_LINKS } from "@/constants/navigation"
 import { useAuth } from "@/context/AuthContext"
+import { isSuperAdminRole, isCfpbAdminRole, normalizeRoleName } from "@/constants/rbac"
 
 export const Header = React.memo(function Header() {
   const { pathname } = useLocation();
@@ -34,8 +35,22 @@ export const Header = React.memo(function Header() {
     navigate("/login");
   };
 
-  const displayName = user?.fullName || "Admin User";
-  const displayRole = user?.state ? `${user.state}` : (isSuperAdmin ? "Super Admin" : "User");
+  const displayName = user?.fullName || user?.username || "Admin User";
+  
+  // Check if user has Super Admin or CFPB Admin role
+  const userRoles = user?.roles ?? [];
+  const isSuper = isSuperAdmin || userRoles.some(isSuperAdminRole);
+  const isCfpb = userRoles.some((r) => isCfpbAdminRole(r) || normalizeRoleName(r) === "bicfpbadmin");
+
+  // Determine role title for display
+  let roleTitle: string | null = null;
+  if (isSuper) {
+    roleTitle = "Super Admin";
+  } else if (isCfpb) {
+    const matchedRole = userRoles.find((r) => isCfpbAdminRole(r) || normalizeRoleName(r) === "bicfpbadmin");
+    roleTitle = matchedRole || "CFPB ADMIN";
+  }
+
   const initials = displayName.substring(0, 2).toUpperCase();
 
   return (
@@ -50,9 +65,11 @@ export const Header = React.memo(function Header() {
       <div className="flex items-center gap-4">
         {/* User Profile & Logout */}
         <div className="flex items-center gap-3 pl-2">
-          <div className="hidden md:flex flex-col text-right">
+          <div className="hidden md:flex flex-col text-right justify-center">
             <span className="text-sm font-semibold text-slate-700">{displayName}</span>
-            <span className="text-xs text-slate-500 font-medium">{displayRole}</span>
+            {roleTitle && (
+              <span className="text-xs text-slate-500 font-medium">{roleTitle}</span>
+            )}
           </div>
           <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-inner shadow-indigo-200/50">
             {initials}
