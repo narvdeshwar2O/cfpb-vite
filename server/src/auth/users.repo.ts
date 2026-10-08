@@ -81,7 +81,6 @@ export async function findOrCreateLdapUser(input: {
   email: string | null;
   state: string | null;
   groups?: string[];
-  defaultRole?: string;
   groupRoleMappings?: Array<{ groupName: string; roleName: string }>;
 }): Promise<UserRecord> {
   const userGroups = input.groups || [];
@@ -149,8 +148,8 @@ export async function findOrCreateLdapUser(input: {
   }
   input.state = extractedState;
 
-  // Determine assigned role based on group mappings or defaultRole
-  let targetRole = input.defaultRole || "STATE OPERATOR";
+  // Determine assigned role strictly based on group mappings (Super Admin is never allowed via LDAP)
+  let targetRole: string | null = null;
   const mappings = input.groupRoleMappings || [];
 
   if (mappings.length > 0 && userGroups.length > 0) {
@@ -167,7 +166,11 @@ export async function findOrCreateLdapUser(input: {
         );
       });
       if (match) {
-        matchedRoles.push(m.roleName);
+        // Enforce: Super Admin can never be assigned via LDAP mappings
+        const cleanRole = m.roleName.toLowerCase().replace(/[\s_-]+/g, "");
+        if (cleanRole !== "superadmin") {
+          matchedRoles.push(m.roleName);
+        }
       }
     }
     if (matchedRoles.length > 0) {

@@ -73,7 +73,6 @@ authRouter.post(
           email: ldapUser.email,
           state: ldapUser.state,
           groups: ldapUser.groups,
-          defaultRole: ldapConfig.defaultRole,
           groupRoleMappings: ldapConfig.groupRoleMappings,
         });
 

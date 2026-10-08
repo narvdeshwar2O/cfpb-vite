@@ -8,7 +8,6 @@ export interface LdapConfigDto {
   bindDn: string;
   bindPassword?: string;
   searchFilter: string;
-  defaultRole: string;
   useTls: boolean;
   groupRoleMappings: Array<{ groupName: string; roleName: string }>;
 }
@@ -55,7 +54,6 @@ export async function getLdapConfig(): Promise<LdapConfigDto> {
     bindDn: "",
     bindPassword: "",
     searchFilter: "(|(sAMAccountName={username})(uid={username}))",
-    defaultRole: "STATE OPERATOR",
     useTls: true,
     groupRoleMappings: [],
   };

@@ -491,6 +491,13 @@ adminRouter.put(
       return res.status(403).json({ message: "Only Super Admins can update LDAP configuration" });
     }
     const b = req.body ?? {};
+    const rawMappings = (b.group_role_mapping ?? b.groupRoleMappings ?? []) as Array<{ groupName: string; roleName: string }>;
+    // Disallow Super Admin in group-role mappings
+    const safeMappings = rawMappings.filter((m) => {
+      const clean = (m.roleName || "").toLowerCase().replace(/[\s_-]+/g, "");
+      return clean !== "superadmin";
+    });
+
     const normalized = {
       enabled: b.enabled ?? false,
       serverUrl: b.server_url ?? b.serverUrl ?? "",
@@ -498,9 +505,8 @@ adminRouter.put(
       bindDn: b.bind_dn ?? b.bindDn ?? "",
       bindPassword: b.bind_password ?? b.bindPassword,
       searchFilter: b.user_search_filter ?? b.searchFilter ?? "(|(sAMAccountName={username})(uid={username}))",
-      defaultRole: b.default_role ?? b.defaultRole ?? "STATE OPERATOR",
       useTls: b.use_tls ?? b.useTls ?? true,
-      groupRoleMappings: b.group_role_mapping ?? b.groupRoleMappings ?? [],
+      groupRoleMappings: safeMappings,
     };
     const { saveLdapConfig } = await import("./ldap-config.repo.js");
     await saveLdapConfig(normalized);

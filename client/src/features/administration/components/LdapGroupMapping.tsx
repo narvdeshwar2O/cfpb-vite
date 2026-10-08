@@ -18,7 +18,12 @@ interface Props {
 }
 
 export const LdapGroupMapping: React.FC<Props> = ({ mappings, roles = [], onChange }) => {
-  const availableRoles = roles.length > 0 ? roles : ["Viewer", "Analyst", "Editor", "Admin"];
+  // Ensure Super Admin can never be selected or mapped to an LDAP group
+  const rawRoles = roles.length > 0 ? roles : ["Viewer", "Analyst", "Editor", "Admin"];
+  const availableRoles = rawRoles.filter((r) => {
+    const clean = r.toLowerCase().replace(/[\s_-]+/g, "");
+    return clean !== "superadmin";
+  });
   const [newGroup, setNewGroup] = useState("");
   const [newRole, setNewRole] = useState(availableRoles[0] || "Viewer");
 

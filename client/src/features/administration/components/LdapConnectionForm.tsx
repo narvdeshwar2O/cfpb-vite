@@ -1,13 +1,6 @@
 import React, { useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { type LdapConfig } from "@/services/adminApi";
 
 interface FieldConfig {
@@ -54,13 +47,11 @@ const LDAP_FIELDS: FieldConfig[] = [
 
 interface Props {
   config: LdapConfig;
-  roles?: string[];
   onChange: <K extends keyof LdapConfig>(key: K, value: LdapConfig[K]) => void;
 }
 
-export const LdapConnectionForm: React.FC<Props> = ({ config, roles = [], onChange }) => {
+export const LdapConnectionForm: React.FC<Props> = ({ config, onChange }) => {
   const useTlsId = useId();
-  const availableRoles = roles.length > 0 ? roles : ["Viewer", "Analyst", "Editor", "Admin"];
 
   return (
     <>
@@ -80,23 +71,6 @@ export const LdapConnectionForm: React.FC<Props> = ({ config, roles = [], onChan
             )}
           </div>
         ))}
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-slate-700">Default Role</Label>
-          <Select value={config.defaultRole} onValueChange={(val) => onChange("defaultRole", val)}>
-            <SelectTrigger className="bg-slate-50 border-slate-200 text-sm">
-              <SelectValue placeholder="Select Default Role" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableRoles.map((r) => (
-                <SelectItem key={r} value={r}>{r}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-[11px] text-muted-foreground font-medium">
-            Fallback role assigned when AD groups do not match any rule
-          </p>
-        </div>
       </div>
 
       <div className="flex items-center gap-2 pt-1">

@@ -165,7 +165,6 @@ export interface LdapConfig {
   bindDn: string;
   bindPassword?: string;
   searchFilter: string;
-  defaultRole: string;
   useTls: boolean;
   groupRoleMappings: Array<{ groupName: string; roleName: string }>;
 }
@@ -182,7 +181,6 @@ export async function saveLdapConfig(cfg: LdapConfig): Promise<void> {
     base_dn: cfg.baseDn,
     bind_dn: cfg.bindDn,
     bind_password: cfg.bindPassword,
-    default_role: cfg.defaultRole,
     use_tls: cfg.useTls,
     user_search_filter: cfg.searchFilter,
     group_role_mapping: cfg.groupRoleMappings || [],
@@ -201,7 +199,6 @@ export async function testLdapConnection(params: {
   bindPassword?: string;
   baseDn: string;
   searchFilter?: string;
-  defaultRole?: string;
   useTls?: boolean;
 }): Promise<{ ok: boolean; message: string }> {
   const payload = {
@@ -210,7 +207,6 @@ export async function testLdapConnection(params: {
     base_dn: params.baseDn,
     bind_dn: params.bindDn,
     bind_password: params.bindPassword,
-    default_role: params.defaultRole || "viewer",
     use_tls: params.useTls ?? params.serverUrl.startsWith("ldaps://"),
     user_search_filter: params.searchFilter || "{username}",
     group_role_mapping: {},

@@ -10,7 +10,7 @@ import { LdapGroupMapping } from "@/features/administration/components/LdapGroup
 export const AdminLdap: React.FC = () => {
   const [config, setConfig] = useState<LdapConfig>({
     enabled: false, serverUrl: "", baseDn: "", bindDn: "", bindPassword: "",
-    searchFilter: "(|(sAMAccountName={username})(uid={username}))", defaultRole: "STATE OPERATOR", useTls: true, groupRoleMappings: [],
+    searchFilter: "(|(sAMAccountName={username})(uid={username}))", useTls: true, groupRoleMappings: [],
   });
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ export const AdminLdap: React.FC = () => {
       const res = await testLdapConnection({
         enabled: config.enabled, serverUrl: config.serverUrl, bindDn: config.bindDn, baseDn: config.baseDn,
         bindPassword: config.bindPassword === "••••••••••••" ? undefined : config.bindPassword,
-        searchFilter: config.searchFilter, defaultRole: config.defaultRole, useTls: config.useTls,
+        searchFilter: config.searchFilter, useTls: config.useTls,
       });
       setTestResult(res);
       if (res.ok) toast.success(res.message); else toast.error(res.message);
@@ -73,7 +73,7 @@ export const AdminLdap: React.FC = () => {
           </label>
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
-          <LdapConnectionForm config={config} roles={roles} onChange={(k, v) => setConfig((p) => ({ ...p, [k]: v }))} />
+          <LdapConnectionForm config={config} onChange={(k, v) => setConfig((p) => ({ ...p, [k]: v }))} />
           <LdapGroupMapping mappings={config.groupRoleMappings} roles={roles} onChange={(m) => setConfig((p) => ({ ...p, groupRoleMappings: m }))} />
           {testResult && (
             <div className={`flex items-center gap-2 p-3 rounded-lg text-xs font-medium border ${testResult.ok ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-red-50 text-red-800 border-red-200"}`}>
