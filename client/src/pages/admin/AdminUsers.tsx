@@ -30,9 +30,7 @@ import {
 import {
   AlertTriangle,
   MoreHorizontal,
-  Plus,
   Power,
-  RefreshCw,
   Trash2,
   Users as UsersIcon,
 } from "lucide-react";
@@ -133,7 +131,7 @@ const AdminUsers: React.FC = () => {
             <UsersIcon className="h-5 w-5 text-blue-600" />
             User Management
           </CardTitle>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
@@ -142,7 +140,7 @@ const AdminUsers: React.FC = () => {
               <Plus className="mr-2 h-4 w-4" />
               Add User
             </Button>
-          </div>
+          </div> */}
         </CardHeader>
         <CardContent>
           {error && (
