@@ -44,7 +44,73 @@ import {
   type AuditLogItem,
   type AuditLogFilters,
 } from "@/services/adminApi";
+import { getNavLabelByPath } from "@/constants/navigation";
 import { toast } from "@/components/ui/sonner";
+
+function getDisplayResource(log: AuditLogItem): { title: string; subtitle?: string } {
+  // If details has explicit pageTitle, prioritize that
+  const detailsTitle = typeof log.details?.pageTitle === "string" ? log.details.pageTitle : null;
+
+  // Check if resource is a route or page/dashboard/report
+  if (
+    log.resourceType === "dashboard" ||
+    log.resourceType === "report" ||
+    log.action.startsWith("page.") ||
+    log.action.startsWith("report.")
+  ) {
+    const rawPath = log.resourceId || (typeof log.details?.path === "string" ? log.details.path : null);
+    const resolvedTitle = detailsTitle || (rawPath ? getNavLabelByPath(rawPath) : "Dashboard");
+    return {
+      title: resolvedTitle,
+      subtitle: rawPath && rawPath !== resolvedTitle ? rawPath : undefined,
+    };
+  }
+
+  // Handle user management
+  if (log.resourceType === "user") {
+    return {
+      title: "User Management",
+      subtitle: log.resourceId ? `User ID: ${log.resourceId.substring(0, 8)}...` : undefined,
+    };
+  }
+
+  // Handle role / permission management
+  if (log.resourceType === "role") {
+    return {
+      title: "Roles & Permissions",
+      subtitle: log.resourceId ? `Role: ${log.resourceId}` : undefined,
+    };
+  }
+
+  if (log.resourceType === "permission") {
+    return {
+      title: "Permissions",
+      subtitle: log.resourceId ? `Permission: ${log.resourceId}` : undefined,
+    };
+  }
+
+  // Handle LDAP configuration
+  if (log.resourceType === "ldap_config" || log.resourceType === "ldap") {
+    return {
+      title: "LDAP / AD Configuration",
+      subtitle: log.resourceId || undefined,
+    };
+  }
+
+  // Handle authentication
+  if (log.resourceType === "auth" || log.action.startsWith("auth.")) {
+    return {
+      title: "Authentication / Session",
+      subtitle: log.resourceId || undefined,
+    };
+  }
+
+  // Fallback
+  return {
+    title: log.resourceType.charAt(0).toUpperCase() + log.resourceType.slice(1),
+    subtitle: log.resourceId || undefined,
+  };
+}
 
 export const AdminAudit: React.FC = () => {
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
@@ -342,14 +408,21 @@ export const AdminAudit: React.FC = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="text-xs">
-                            <span className="text-slate-700 capitalize">{log.resourceType}</span>
-                            {log.resourceId && (
-                              <span className="text-[10px] text-muted-foreground block font-mono">
-                                {log.resourceId.substring(0, 8)}...
-                              </span>
-                            )}
-                          </div>
+                          {(() => {
+                            const resInfo = getDisplayResource(log);
+                            return (
+                              <div className="text-xs">
+                                <span className="font-semibold text-slate-800 block">
+                                  {resInfo.title}
+                                </span>
+                                {resInfo.subtitle && (
+                                  <span className="text-[10px] text-muted-foreground block font-mono truncate max-w-[200px]" title={resInfo.subtitle}>
+                                    {resInfo.subtitle}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           {isSuccess ? (
@@ -459,6 +532,17 @@ export const AdminAudit: React.FC = () => {
                   <span className={`font-semibold ${selectedLog.outcome === "success" ? "text-emerald-600" : "text-rose-600"}`}>
                     {selectedLog.outcome.toUpperCase()}
                   </span>
+                </div>
+                <div className="col-span-2 border-t border-slate-200/80 pt-2 mt-1">
+                  <span className="text-muted-foreground block font-semibold text-[11px]">Resource / Module</span>
+                  <span className="font-semibold text-slate-900 text-xs">
+                    {getDisplayResource(selectedLog).title}
+                  </span>
+                  {getDisplayResource(selectedLog).subtitle && (
+                    <span className="font-mono text-[11px] text-muted-foreground block mt-0.5">
+                      {getDisplayResource(selectedLog).subtitle}
+                    </span>
+                  )}
                 </div>
               </div>
 

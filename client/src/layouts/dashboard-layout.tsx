@@ -5,6 +5,7 @@ import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { FilterProvider } from "@/app/providers/filter-provider";
 import { recordAuditEvent } from "@/services/adminApi";
+import { getNavLabelByPath } from "@/constants/navigation";
 
 export function DashboardLayout() {
   const location = useLocation();
@@ -15,12 +16,14 @@ export function DashboardLayout() {
     if (location.pathname && location.pathname !== lastTrackedPath.current) {
       lastTrackedPath.current = location.pathname;
       if (location.pathname !== "/admin/audit") {
+        const pageTitle = getNavLabelByPath(location.pathname);
         recordAuditEvent({
           action: "page.view",
           resourceType: "dashboard",
           resourceId: location.pathname,
           outcome: "success",
           details: {
+            pageTitle,
             path: location.pathname,
             search: location.search || null,
           },

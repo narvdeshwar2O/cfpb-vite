@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { recordAuditEvent } from "@/services/adminApi";
+import { getNavLabelByPath } from "@/constants/navigation";
 
 interface FilterState {
   state: string[];
@@ -53,6 +54,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
     }
 
     debounceTimer.current = setTimeout(() => {
+      const pageTitle = getNavLabelByPath(window.location.pathname);
       // Record filter apply event
       recordAuditEvent({
         action: "report.filter.apply",
@@ -60,6 +62,7 @@ export function FilterProvider({ children }: { children: ReactNode }) {
         resourceId: window.location.pathname,
         outcome: "success",
         details: {
+          pageTitle,
           path: window.location.pathname,
           filters: {
             state: filters.state,

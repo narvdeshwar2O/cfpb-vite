@@ -157,3 +157,27 @@ export const ADMIN_NAV_LINKS = [
   },
 ];
 
+export function getNavLabelByPath(pathname: string): string {
+  if (!pathname || pathname === "/") return "Central Admin";
+  
+  // Normalize trailing slash if any
+  const cleanPath = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+
+  for (const item of NAV_LINKS) {
+    if (item.href === cleanPath) return item.label;
+    if (item.children) {
+      for (const child of item.children) {
+        if (child.href === cleanPath) {
+          return `${item.label}: ${child.label}`;
+        }
+      }
+    }
+  }
+
+  for (const item of ADMIN_NAV_LINKS) {
+    if (item.href === cleanPath) return item.label;
+  }
+
+  return cleanPath;
+}
+

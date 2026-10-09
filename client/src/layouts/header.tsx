@@ -3,13 +3,12 @@ import { LogOut } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { NAV_LINKS } from "@/constants/navigation"
 import { useAuth } from "@/context/AuthContext"
-import { isSuperAdminRole, isCfpbAdminRole, normalizeRoleName } from "@/constants/rbac"
 
 export const Header = React.memo(function Header() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  const { user, isSuperAdmin, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   let title = "NAFIS Dashboard";
   let currentIcon = null;
@@ -35,23 +34,18 @@ export const Header = React.memo(function Header() {
     navigate("/login");
   };
 
-  const displayName = user?.fullName || user?.username || "Admin User";
-  
-  // Check if user has Super Admin or CFPB Admin role
-  const userRoles = user?.roles ?? [];
-  const isSuper = isSuperAdmin || userRoles.some(isSuperAdminRole);
-  const isCfpb = userRoles.some((r) => isCfpbAdminRole(r) || normalizeRoleName(r) === "bicfpbadmin");
+  const rawName = user?.fullName || user?.username || "Admin User";
+  const userState = user?.state?.trim();
 
-  // Determine role title for display
-  let roleTitle: string | null = null;
-  if (isSuper) {
-    roleTitle = "Super Admin";
-  } else if (isCfpb) {
-    const matchedRole = userRoles.find((r) => isCfpbAdminRole(r) || normalizeRoleName(r) === "bicfpbadmin");
-    roleTitle = matchedRole || "CFPB ADMIN";
-  }
+  // If state is present, show state name with user name (e.g. "Admin User (DELHI)")
+  const displayName = userState ? `${rawName} (${userState})` : rawName;
 
-  const initials = displayName.substring(0, 2).toUpperCase();
+  // Role display:
+  // When state is not present, role in navbar will be "super_admin" only.
+  // When state is present, do not show super_admin role title (state is already attached with user name).
+  const roleTitle: string | null = !userState ? "super_admin" : null;
+
+  const initials = rawName.substring(0, 2).toUpperCase();
 
   return (
     <header className="flex h-18.25 shrink-0 items-center justify-between bg-white border-b border-slate-200 px-6 sticky top-0 z-20 print:hidden">
