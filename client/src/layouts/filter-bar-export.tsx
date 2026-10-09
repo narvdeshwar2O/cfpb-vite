@@ -2,6 +2,7 @@ import React from "react";
 import { Printer, FileDown } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NAV_LINKS } from "@/constants/navigation";
+import { recordAuditEvent } from "@/services/adminApi";
 
 export const FilterBarExport = React.memo(function FilterBarExport() {
   const { pathname } = useLocation();
@@ -56,6 +57,18 @@ export const FilterBarExport = React.memo(function FilterBarExport() {
     
     printWindow.document.close();
     
+    recordAuditEvent({
+      action: "report.export.pdf",
+      resourceType: "report",
+      resourceId: pathname,
+      outcome: "success",
+      details: {
+        pageTitle,
+        path: pathname,
+        type: "print_pdf",
+      },
+    });
+
     setTimeout(() => {
       printWindow.focus();
       printWindow.print();
@@ -69,6 +82,34 @@ export const FilterBarExport = React.memo(function FilterBarExport() {
       alert("No table found to export on this page.");
       return;
     }
+
+    // Find the current page title based on route
+    let pageTitle = "Data Export";
+    for (const link of NAV_LINKS) {
+      if (link.href === pathname) {
+        pageTitle = link.label;
+        break;
+      }
+      if (link.children) {
+        const child = link.children.find((c) => c.href === pathname);
+        if (child) {
+          pageTitle = child.label;
+          break;
+        }
+      }
+    }
+
+    recordAuditEvent({
+      action: "report.export.csv",
+      resourceType: "report",
+      resourceId: pathname,
+      outcome: "success",
+      details: {
+        pageTitle,
+        path: pathname,
+        type: "csv",
+      },
+    });
 
     const rows = Array.from(table.querySelectorAll("tr"));
     const csvContent = rows
@@ -88,11 +129,12 @@ export const FilterBarExport = React.memo(function FilterBarExport() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "export.csv");
+    link.setAttribute("download", `${pageTitle.toLowerCase().replace(/[^a-z0-9]/g, "_")}_export.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
 
   if (isDashboard) {
     return null;

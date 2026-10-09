@@ -386,6 +386,25 @@ adminRouter.put(
     }
 
     await repo.setUserActive(id, isActive);
+
+    const { extractClientIp, extractUserAgent } = await import("../audit/ip.utils.js");
+    const { logAuditEvent } = await import("../audit/audit.repo.js");
+    await logAuditEvent({
+      actorId: caller.callerId,
+      actorUsername: caller.caller?.username,
+      actorType: caller.isSuper ? "super_admin" : "user",
+      action: isActive ? "user.activate" : "user.deactivate",
+      resourceType: "user",
+      resourceId: id,
+      outcome: "success",
+      clientIp: extractClientIp(req),
+      userAgent: extractUserAgent(req),
+      details: {
+        targetUsername: targetUser.username,
+        isActive,
+      },
+    }).catch(() => {});
+
     return res.json({ ok: true });
   })
 );
@@ -483,10 +502,46 @@ adminRouter.delete(
       return res.status(404).json({ message: "User not found" });
     }
 
-    await repo.deleteUser(id);
+    const { extractClientIp, extractUserAgent } = await import("../audit/ip.utils.js");
+    const { logAuditEvent } = await import("../audit/audit.repo.js");
+    const { pool } = await import("../db/pool.js");
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await repo.deleteUser(id, client);
+      await logAuditEvent(
+        {
+          actorId: caller.callerId,
+          actorUsername: caller.caller?.username,
+          actorType: "super_admin",
+          action: "user.delete",
+          resourceType: "user",
+          resourceId: id,
+          outcome: "success",
+          clientIp: extractClientIp(req),
+          userAgent: extractUserAgent(req),
+          details: {
+            deletedUsername: targetUser.username,
+            deletedFullName: targetUser.fullName,
+            deletedRoles: targetUser.roles,
+            deletedState: targetUser.state,
+          },
+        },
+        client
+      );
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+
     return res.json({ ok: true });
   })
 );
+
 
 // ── LDAP / Active Directory Integration (SUPER ADMIN ONLY) ──────────────────
 adminRouter.get(
@@ -535,6 +590,27 @@ adminRouter.put(
     };
     const { saveLdapConfig } = await import("./ldap-config.repo.js");
     await saveLdapConfig(normalized);
+
+    const { extractClientIp, extractUserAgent } = await import("../audit/ip.utils.js");
+    const { logAuditEvent } = await import("../audit/audit.repo.js");
+    await logAuditEvent({
+      actorId: req.user!.sub,
+      actorUsername: req.user!.username,
+      actorType: "super_admin",
+      action: "ldap.config.update",
+      resourceType: "ldap",
+      outcome: "success",
+      clientIp: extractClientIp(req),
+      userAgent: extractUserAgent(req),
+      details: {
+        enabled: normalized.enabled,
+        serverUrl: normalized.serverUrl,
+        baseDn: normalized.baseDn,
+        bindDn: normalized.bindDn,
+        groupRoleMappings: safeMappings,
+      },
+    }).catch(() => {});
+
     return res.json({ ok: true });
   })
 );
@@ -564,3 +640,101 @@ adminRouter.post(
     return res.json(result);
   })
 );
+
+// ── Audit Logs Query API (STRICTLY SUPER ADMIN ONLY) ─────────────────────────
+adminRouter.get(
+  "/audit-logs",
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const access = await getUserAccess(req.user!.sub);
+    // Explicitly restrict to Super Admin only
+    if (!access.isSuperAdmin) {
+      return res.status(403).json({ message: "Access restricted: Only Super Admins can view audit logs" });
+    }
+
+    const { queryAuditLogs } = await import("../audit/audit.repo.js");
+    const {
+      startDate,
+      endDate,
+      actorUsername,
+      action,
+      resourceType,
+      outcome,
+      clientIp,
+      limit,
+      offset,
+    } = req.query;
+
+    const result = await queryAuditLogs({
+      startDate: typeof startDate === "string" ? startDate : undefined,
+      endDate: typeof endDate === "string" ? endDate : undefined,
+      actorUsername: typeof actorUsername === "string" ? actorUsername : undefined,
+      action: typeof action === "string" ? action : undefined,
+      resourceType: typeof resourceType === "string" ? resourceType : undefined,
+      outcome: outcome === "success" || outcome === "failure" || outcome === "denied" ? outcome : undefined,
+      clientIp: typeof clientIp === "string" ? clientIp : undefined,
+      limit: limit ? Number(limit) : 25,
+      offset: offset ? Number(offset) : 0,
+    });
+
+    return res.json(result);
+  })
+);
+
+adminRouter.get(
+  "/audit-logs/:id",
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const access = await getUserAccess(req.user!.sub);
+    if (!access.isSuperAdmin) {
+      return res.status(403).json({ message: "Access restricted: Only Super Admins can view audit logs" });
+    }
+
+    const { getAuditLogById } = await import("../audit/audit.repo.js");
+    const log = await getAuditLogById(req.params.id);
+    if (!log) {
+      return res.status(404).json({ message: "Audit log entry not found" });
+    }
+
+    return res.json({ log });
+  })
+);
+
+/**
+ * POST /admin/audit-logs
+ * Ingests validated client-initiated security/business events (route visits, report exports, filter changes).
+ * Server validates and enforces actor identity from the authenticated JWT token.
+ */
+adminRouter.post(
+  "/audit-logs",
+  asyncHandler(async (req: AuthedRequest, res: Response) => {
+    const { action, resourceType, resourceId, outcome, details, failureReason } = req.body ?? {};
+
+    if (typeof action !== "string" || !action.trim()) {
+      return res.status(400).json({ message: "action is required" });
+    }
+    if (typeof resourceType !== "string" || !resourceType.trim()) {
+      return res.status(400).json({ message: "resourceType is required" });
+    }
+
+    const caller = await getCallerContext(req);
+    const { extractClientIp, extractUserAgent } = await import("../audit/ip.utils.js");
+    const { logAuditEvent } = await import("../audit/audit.repo.js");
+
+    const id = await logAuditEvent({
+      actorId: caller.callerId,
+      actorUsername: caller.caller?.username,
+      actorType: caller.isSuper ? "super_admin" : "user",
+      action: action.trim(),
+      resourceType: resourceType.trim(),
+      resourceId: typeof resourceId === "string" ? resourceId.trim() : null,
+      outcome: outcome === "failure" || outcome === "denied" ? outcome : "success",
+      failureReason: typeof failureReason === "string" ? failureReason.trim() : null,
+      clientIp: extractClientIp(req),
+      userAgent: extractUserAgent(req),
+      details: typeof details === "object" && details !== null ? details : null,
+    });
+
+    return res.status(201).json({ id });
+  })
+);
+
+

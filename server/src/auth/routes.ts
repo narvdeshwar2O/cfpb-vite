@@ -46,13 +46,28 @@ authRouter.post(
   "/login",
   asyncHandler(async (req: Request, res: Response) => {
     const { username, password, authType } = req.body ?? {};
+    const { extractClientIp, extractUserAgent } = await import("../audit/ip.utils.js");
+    const { logAuditEvent } = await import("../audit/audit.repo.js");
+    const clientIp = extractClientIp(req);
+    const userAgent = extractUserAgent(req);
 
     if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
+      await logAuditEvent({
+        actorUsername: typeof username === "string" ? username : null,
+        actorType: "user",
+        action: "auth.login",
+        resourceType: "auth",
+        outcome: "failure",
+        failureReason: "Missing credentials",
+        clientIp,
+        userAgent,
+      }).catch(() => {});
       return res.status(400).json({ message: "username and password are required" });
     }
 
     const type = authType === "ldap" ? "ldap" : "local";
     let authenticatedUser = null;
+    let failReason = "Invalid credentials";
 
     // ── 1. LDAP Authentication Mode ──
     if (type === "ldap") {
@@ -60,6 +75,16 @@ authRouter.post(
       const ldapConfig = await getLdapConfig();
 
       if (!ldapConfig.enabled) {
+        await logAuditEvent({
+          actorUsername: username.trim(),
+          actorType: "user",
+          action: "auth.login.ldap",
+          resourceType: "auth",
+          outcome: "failure",
+          failureReason: "LDAP authentication is currently disabled",
+          clientIp,
+          userAgent,
+        }).catch(() => {});
         return res.status(503).json({ message: "LDAP authentication is currently disabled" });
       }
 
@@ -78,10 +103,22 @@ authRouter.post(
 
         if (record && record.is_active) {
           authenticatedUser = record;
+        } else if (record && !record.is_active) {
+          failReason = "Account deactivated";
         }
       }
 
       if (!authenticatedUser) {
+        await logAuditEvent({
+          actorUsername: username.trim(),
+          actorType: "user",
+          action: "auth.login.ldap",
+          resourceType: "auth",
+          outcome: "failure",
+          failureReason: failReason,
+          clientIp,
+          userAgent,
+        }).catch(() => {});
         return res.status(401).json({ message: "Invalid LDAP / Domain credentials" });
       }
     } else {
@@ -93,9 +130,21 @@ authRouter.post(
 
       if (localUser && ok) {
         authenticatedUser = localUser;
+      } else {
+        failReason = !localUser ? "User not found or inactive" : "Invalid password";
       }
 
       if (!authenticatedUser) {
+        await logAuditEvent({
+          actorUsername: username.trim(),
+          actorType: "user",
+          action: "auth.login.local",
+          resourceType: "auth",
+          outcome: "failure",
+          failureReason: failReason,
+          clientIp,
+          userAgent,
+        }).catch(() => {});
         return res.status(401).json({ message: "Invalid local credentials" });
       }
     }
@@ -109,7 +158,54 @@ authRouter.post(
       roles: dto.roles,
     });
 
+    const isSuper = dto.roles.includes("Super Admin");
+
+    // Durably log successful login
+    await logAuditEvent({
+      actorId: authenticatedUser.id,
+      actorUsername: authenticatedUser.username,
+      actorType: isSuper ? "super_admin" : "user",
+      action: type === "ldap" ? "auth.login.ldap" : "auth.login.local",
+      resourceType: "auth",
+      resourceId: authenticatedUser.id,
+      outcome: "success",
+      clientIp,
+      userAgent,
+      details: {
+        roles: dto.roles,
+        state: dto.state,
+        authType: type,
+      },
+    }).catch((err) => console.error("Audit log error:", err));
+
     return res.json({ token, user: dto });
+  })
+);
+
+/**
+ * POST /auth/logout
+ * Audits explicit user logout.
+ */
+authRouter.post(
+  "/logout",
+  requireAuth,
+  asyncHandler(async (req: Request, res: Response) => {
+    const authed = req as AuthedRequest;
+    const { extractClientIp, extractUserAgent } = await import("../audit/ip.utils.js");
+    const { logAuditEvent } = await import("../audit/audit.repo.js");
+
+    await logAuditEvent({
+      actorId: authed.user?.sub,
+      actorUsername: authed.user?.username,
+      actorType: authed.user?.roles?.includes("Super Admin") ? "super_admin" : "user",
+      action: "auth.logout",
+      resourceType: "auth",
+      outcome: "success",
+      clientIp: extractClientIp(req),
+      userAgent: extractUserAgent(req),
+    }).catch(() => {});
+
+    return res.json({ ok: true });
   })
 );
 

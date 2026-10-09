@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { recordAuditEvent } from "@/services/adminApi";
 
 interface FilterState {
   state: string[];
@@ -29,6 +30,9 @@ const FilterContext = createContext<FilterContextType | undefined>(undefined);
 
 export function FilterProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<FilterState>(defaultState);
+  const isInitialMount = useRef(true);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   const setFilter = (key: keyof FilterState, value: string | string[]) => {
     setFilters((prev) => ({
@@ -36,6 +40,42 @@ export function FilterProvider({ children }: { children: ReactNode }) {
       [key]: value,
     }));
   };
+
+  // Debounced audit logging when user updates filters
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      // Record filter apply event
+      recordAuditEvent({
+        action: "report.filter.apply",
+        resourceType: "dashboard",
+        resourceId: window.location.pathname,
+        outcome: "success",
+        details: {
+          path: window.location.pathname,
+          filters: {
+            state: filters.state,
+            district: filters.district,
+            start_date: filters.start_date || null,
+            end_date: filters.end_date || null,
+          },
+        },
+      });
+    }, 1200);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [filters]);
+
 
   const getFilterArray = (key: keyof FilterState): string[] => {
     const val = filters[key];

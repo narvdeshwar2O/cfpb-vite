@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import type { PoolClient } from "pg";
 import { pool, query } from "../db/pool.js";
 
 const GUARD = "web";
@@ -289,10 +290,11 @@ export async function getUserById(userId: string): Promise<AdminUserDto | null> 
 }
 
 /** Permanently deletes a user and associated roles/permissions. */
-export async function deleteUser(userId: string): Promise<void> {
-  const client = await pool.connect();
+export async function deleteUser(userId: string, externalClient?: PoolClient): Promise<void> {
+  const client = externalClient ?? (await pool.connect());
+  const isInternal = !externalClient;
   try {
-    await client.query("BEGIN");
+    if (isInternal) await client.query("BEGIN");
     await client.query(
       `DELETE FROM model_has_roles WHERE model_id = $1 AND model_type = $2`,
       [userId, MODEL_TYPE]
@@ -302,13 +304,14 @@ export async function deleteUser(userId: string): Promise<void> {
       [userId, MODEL_TYPE]
     );
     await client.query(`DELETE FROM users WHERE id = $1`, [userId]);
-    await client.query("COMMIT");
+    if (isInternal) await client.query("COMMIT");
   } catch (err) {
-    await client.query("ROLLBACK");
+    if (isInternal) await client.query("ROLLBACK");
     throw err;
   } finally {
-    client.release();
+    if (isInternal) client.release();
   }
 }
+
 
 

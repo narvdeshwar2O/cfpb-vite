@@ -225,3 +225,71 @@ export async function testLdapConnection(params: {
   });
 }
 
+export interface AuditLogItem {
+  id: string;
+  timestamp: string;
+  actorId: string | null;
+  actorUsername: string | null;
+  actorType: "user" | "super_admin" | "system" | "service";
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  outcome: "success" | "failure" | "denied";
+  failureReason: string | null;
+  clientIp: string | null;
+  userAgent: string | null;
+  details: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface AuditLogFilters {
+  startDate?: string;
+  endDate?: string;
+  actorUsername?: string;
+  action?: string;
+  resourceType?: string;
+  outcome?: string;
+  clientIp?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export async function fetchAuditLogs(filters: AuditLogFilters): Promise<{ logs: AuditLogItem[]; total: number }> {
+  const params = new URLSearchParams();
+  if (filters.startDate) params.set("startDate", filters.startDate);
+  if (filters.endDate) params.set("endDate", filters.endDate);
+  if (filters.actorUsername) params.set("actorUsername", filters.actorUsername);
+  if (filters.action) params.set("action", filters.action);
+  if (filters.resourceType) params.set("resourceType", filters.resourceType);
+  if (filters.outcome) params.set("outcome", filters.outcome);
+  if (filters.clientIp) params.set("clientIp", filters.clientIp);
+  if (filters.limit) params.set("limit", String(filters.limit));
+  if (filters.offset !== undefined) params.set("offset", String(filters.offset));
+
+  const queryStr = params.toString() ? `?${params.toString()}` : "";
+  return request<{ logs: AuditLogItem[]; total: number }>(`/admin/audit-logs${queryStr}`);
+}
+
+export async function fetchAuditLogById(id: string): Promise<AuditLogItem> {
+  const data = await request<{ log: AuditLogItem }>(`/admin/audit-logs/${id}`);
+  return data.log;
+}
+
+export async function recordAuditEvent(params: {
+  action: string;
+  resourceType: string;
+  resourceId?: string | null;
+  outcome?: "success" | "failure" | "denied";
+  failureReason?: string | null;
+  details?: Record<string, unknown> | null;
+}): Promise<void> {
+  await request<{ id: string }>("/admin/audit-logs", {
+    method: "POST",
+    body: JSON.stringify(params),
+  }).catch(() => {
+    // Non-blocking: failures to send client activity shouldn't interrupt UX
+  });
+}
+
+
+

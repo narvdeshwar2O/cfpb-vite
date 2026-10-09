@@ -15,16 +15,26 @@ export function LoginForm() {
   const [authType, setAuthType] = useState<"local" | "ldap">("local")
   const [email, setEmail] = useState("admin")
   const [password, setPassword] = useState("admin")
-  const [error, setError] = useState("")
+  const [error, setError] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("expired") === "1") {
+        return "Your session has timed out after 8 hours. Please log in again.";
+      }
+    }
+    return "";
+  });
 
   useEffect(() => {
     fetchAuthConfig().then((cfg) => {
-      setLdapEnabled(cfg.ldapEnabled)
+      setLdapEnabled(cfg.ldapEnabled);
       if (!cfg.ldapEnabled) {
-        setAuthType("local")
+        setAuthType("local");
       }
-    })
-  }, [])
+    });
+  }, []);
+
+
 
   const [isLoading, setIsLoading] = useState(false)
 

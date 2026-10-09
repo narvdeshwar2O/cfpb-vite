@@ -90,3 +90,34 @@ BEGIN
     ON CONFLICT DO NOTHING;
   END IF;
 END $$;
+
+-- ── Audit Logs ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  timestamp      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  actor_id       UUID REFERENCES users(id) ON DELETE SET NULL,
+  actor_username TEXT,
+  actor_type     TEXT NOT NULL DEFAULT 'user', -- 'user', 'super_admin', 'system', 'service'
+  action         TEXT NOT NULL,                -- e.g. 'auth.login', 'user.delete', 'role.create'
+  resource_type  TEXT NOT NULL,                -- e.g. 'auth', 'user', 'role', 'permission', 'ldap'
+  resource_id    TEXT,
+  outcome        TEXT NOT NULL,                -- 'success', 'failure', 'denied'
+  failure_reason TEXT,
+  client_ip      INET,
+  user_agent     TEXT,
+  details        JSONB,                        -- structured before/after diff or metadata
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs (timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_id ON audit_logs (actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs (action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_resource ON audit_logs (resource_type, resource_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_outcome ON audit_logs (outcome);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_client_ip ON audit_logs (client_ip);
+
+-- Register audit.view permission
+INSERT INTO permissions (name, guard_name, description)
+VALUES ('audit.view', 'web', 'View audit trail logs and security events')
+ON CONFLICT (name, guard_name) DO NOTHING;
+

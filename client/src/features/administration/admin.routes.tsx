@@ -11,6 +11,7 @@ const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
 const AdminRoles = lazy(() => import("@/pages/admin/AdminRoles"));
 const AdminPermissions = lazy(() => import("@/pages/admin/AdminPermissions"));
 const AdminLdap = lazy(() => import("@/pages/admin/AdminLdap"));
+const AdminAudit = lazy(() => import("@/pages/admin/AdminAudit"));
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -72,4 +73,19 @@ export const adminRoutes: RouteObject[] = [
       permission: "SUPER_ADMIN",
     },
   },
+  {
+    path: ROUTES.adminAudit,
+    element: (
+      <Suspense fallback={<PageSkeleton />}>
+        <PermissionGuard superAdminOnly>
+          <AdminAudit />
+        </PermissionGuard>
+      </Suspense>
+    ),
+    handle: {
+      title: "Audit Logs",
+      permission: "SUPER_ADMIN",
+    },
+  },
 ];
+

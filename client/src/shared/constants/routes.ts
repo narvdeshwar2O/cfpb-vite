@@ -24,4 +24,6 @@ export const ROUTES = {
   adminRoles: "/admin/roles",
   adminPermissions: "/admin/permissions",
   adminLdap: "/admin/ldap",
+  adminAudit: "/admin/audit",
 } as const;
+

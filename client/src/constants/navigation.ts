@@ -8,6 +8,7 @@ import {
   Map,
   ShieldCheck,
   Network,
+  FileText,
 } from "lucide-react";
 
 import { ROUTES } from "@/shared/constants/routes";
@@ -147,4 +148,12 @@ export const ADMIN_NAV_LINKS = [
     superAdminOnly: true,
     preload: () => import("@/pages/admin/AdminLdap")
   },
+  {
+    label: "Audit Logs",
+    href: ROUTES.adminAudit,
+    icon: FileText,
+    superAdminOnly: true,
+    preload: () => import("@/pages/admin/AdminAudit")
+  },
 ];
+

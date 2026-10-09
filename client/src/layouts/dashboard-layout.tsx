@@ -1,11 +1,33 @@
+import { useEffect, useRef } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { FilterProvider } from "@/app/providers/filter-provider";
+import { recordAuditEvent } from "@/services/adminApi";
 
 export function DashboardLayout() {
   const location = useLocation();
+  const lastTrackedPath = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Only track if pathname changed and is not the audit page itself (avoid recursion)
+    if (location.pathname && location.pathname !== lastTrackedPath.current) {
+      lastTrackedPath.current = location.pathname;
+      if (location.pathname !== "/admin/audit") {
+        recordAuditEvent({
+          action: "page.view",
+          resourceType: "dashboard",
+          resourceId: location.pathname,
+          outcome: "success",
+          details: {
+            path: location.pathname,
+            search: location.search || null,
+          },
+        });
+      }
+    }
+  }, [location.pathname, location.search]);
 
   return (
     <AuthGuard>

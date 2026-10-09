@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components, react-hooks/set-state-in-effect */
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import {
   fetchMe,
   loginRequest,
@@ -30,9 +30,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Helper to parse JWT expiration timestamp
+  const getTokenExpMs = (token: string): number | null => {
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(atob(parts[1]));
+      return typeof payload.exp === "number" ? payload.exp * 1000 : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleSessionExpired = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    setUser(null);
+    setIsAuthenticated(false);
+  }, []);
+
+  // Proactive timer to automatically log out exactly when token expires (8 Hours)
+  useEffect(() => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token || !isAuthenticated) return;
+
+    const expMs = getTokenExpMs(token);
+    if (!expMs) return;
+
+    const remainingMs = expMs - Date.now();
+    if (remainingMs <= 0) {
+      handleSessionExpired();
+      return;
+    }
+
+    // Set auto-logout timer for the exact remaining duration of the 8H session
+    const timer = setTimeout(() => {
+      handleSessionExpired();
+      window.location.href = "/login?expired=1";
+    }, remainingMs);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, handleSessionExpired]);
+
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if token already expired before even requesting
+    const expMs = getTokenExpMs(token);
+    if (expMs && Date.now() >= expMs) {
+      handleSessionExpired();
       setIsLoading(false);
       return;
     }
@@ -44,11 +94,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsAuthenticated(true);
       })
       .catch(() => {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        handleSessionExpired();
       })
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [handleSessionExpired]);
 
   const login = async (
     username: string,
@@ -68,11 +117,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    setUser(null);
-    setIsAuthenticated(false);
+    handleSessionExpired();
   };
+
 
   if (isLoading) {
     return (
