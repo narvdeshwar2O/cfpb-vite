@@ -37,13 +37,20 @@ export const Header = React.memo(function Header() {
   const rawName = user?.fullName || user?.username || "Admin User";
   const userState = user?.state?.trim();
 
-  // If state is present, show state name with user name (e.g. "Admin User (DELHI)")
+  // If state is present, show state name with user name (e.g. "Administrator (DELHI)")
   const displayName = userState ? `${rawName} (${userState})` : rawName;
 
   // Role display:
-  // When state is not present, role in navbar will be "super_admin" only.
-  // When state is present, do not show super_admin role title (state is already attached with user name).
-  const roleTitle: string | null = !userState ? "super_admin" : null;
+  // When state is not present, display the user's actual roles in the navbar (e.g. "admin, Super Admin", "Analyst", "Admin", etc.).
+  // When state is present, do not display separate role title (state is shown with user name).
+  let roleTitle: string | null = null;
+  if (!userState) {
+    if (user?.roles && user.roles.length > 0) {
+      roleTitle = user.roles.join(", ");
+    } else {
+      roleTitle = "User";
+    }
+  }
 
   const initials = rawName.substring(0, 2).toUpperCase();
 
