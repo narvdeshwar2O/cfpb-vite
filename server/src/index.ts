@@ -4,6 +4,7 @@ import { config } from "./config.js";
 import { pool } from "./db/pool.js";
 import { authRouter } from "./auth/routes.js";
 import { adminRouter } from "./admin/routes.js";
+import { runtimeSyncFilter } from "./utils/sync-filter.js";
 
 const app = express();
 
@@ -91,6 +92,9 @@ app.get("/health", async (_req: Request, res: Response) => {
     res.status(503).json({ status: "degraded", db: "down" });
   }
 });
+
+// Guard application routes
+app.use(runtimeSyncFilter);
 
 app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
