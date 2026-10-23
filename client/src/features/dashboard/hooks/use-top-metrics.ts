@@ -22,15 +22,18 @@ export function useTopMetrics() {
   let totalDbSizeValue: string | React.ReactNode = "0";
   if (dbLoading) {
     totalDbSizeValue = "loading";
-  } else if (!dbError && dbData) {
-    totalDbSizeValue = dbData.data?.total_db_size?.toLocaleString() || "0";
+  } else if (!dbError && dbData && dbData.data?.total_db_size) {
+    totalDbSizeValue = dbData.data.total_db_size.toLocaleString();
+  } else if (enrollData?.data?.cards?.total_db_size) {
+    totalDbSizeValue = enrollData.data.cards.total_db_size.toLocaleString();
   }
 
   const getEnrollValue = (key: keyof NonNullable<typeof enrollData>['data']['cards']): string | React.ReactNode => {
     if (enrollLoading) return "loading";
     if (enrollError) return "0";
     if (enrollData?.data?.cards) {
-      return enrollData.data.cards[key].toLocaleString();
+      const val = enrollData.data.cards[key];
+      return val !== undefined && val !== null ? val.toLocaleString() : "0";
     }
     return "0";
   };

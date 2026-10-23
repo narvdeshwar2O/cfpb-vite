@@ -20,11 +20,19 @@ export function MiddleMetricsRow() {
     endDate,
   );
 
-  const formatNum = (
-    key: keyof NonNullable<typeof enrollData>["data"]["cards"],
+  const getCardValue = (
+    ...keys: (keyof NonNullable<typeof enrollData>["data"]["cards"])[]
   ) => {
     if (isLoading) return "Loading...";
-    return enrollData?.data?.cards?.[key]?.toLocaleString() || "0";
+    const cards = enrollData?.data?.cards;
+    if (!cards) return "0";
+    for (const key of keys) {
+      const val = cards[key];
+      if (val !== undefined && val !== null) {
+        return val.toLocaleString();
+      }
+    }
+    return "0";
   };
 
   return (
@@ -36,13 +44,13 @@ export function MiddleMetricsRow() {
       <DualSubSectionCard
         leftSection={{
           title: "TPTP",
-          hit: formatNum("tp_hit"),
-          noHit: formatNum("tp_nohit"),
+          hit: getCardValue("tp_hit_tptp", "tp_hit"),
+          noHit: getCardValue("tp_no_hit_tptp", "tp_nohit"),
         }}
         rightSection={{
           title: "TPUL",
-          hit: 0,
-          noHit: 0,
+          hit: getCardValue("tp_hit_tpul"),
+          noHit: getCardValue("tp_no_hit_tpul"),
         }}
         indicatorColor="blue"
         className="h-28"
@@ -52,13 +60,13 @@ export function MiddleMetricsRow() {
       <DualSubSectionCard
         leftSection={{
           title: "TPTP",
-          hit: formatNum("live_hit"),
-          noHit: formatNum("live_nohit"),
+          hit: getCardValue("live_hit_tptp", "live_hit"),
+          noHit: getCardValue("live_no_hit_tptp", "live_nohit"),
         }}
         rightSection={{
           title: "TPUL",
-          hit: 0,
-          noHit: 0,
+          hit: getCardValue("live_hit_tpul"),
+          noHit: getCardValue("live_no_hit_tpul"),
         }}
         indicatorColor="emerald"
         className="h-28"
@@ -68,8 +76,8 @@ export function MiddleMetricsRow() {
       <DualSubSectionCard
         leftSection={{
           title: "LT-TP",
-          hit: formatNum("lt_hit"),
-          noHit: formatNum("lt_nohit"),
+          hit: getCardValue("lt_hit"),
+          noHit: getCardValue("lt_no_hit", "lt_nohit"),
         }}
         rightSection={{
           title: "LT-PALM",

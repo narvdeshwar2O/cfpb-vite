@@ -11,15 +11,25 @@ export interface EnrollDataResponse {
   data: {
     cards: {
       live_enroll: number;
-      live_hit: number;
-      live_nohit: number;
+      live_hit?: number;
+      live_nohit?: number;
+      live_hit_tptp?: number;
+      live_no_hit_tptp?: number;
+      live_hit_tpul?: number;
+      live_no_hit_tpul?: number;
       lt_enroll: number;
       lt_hit: number;
-      lt_nohit: number;
+      lt_nohit?: number;
+      lt_no_hit?: number;
       migration: number;
+      total_db_size?: number;
       tp_enroll: number;
-      tp_hit: number;
-      tp_nohit: number;
+      tp_hit?: number;
+      tp_nohit?: number;
+      tp_hit_tptp?: number;
+      tp_no_hit_tptp?: number;
+      tp_hit_tpul?: number;
+      tp_no_hit_tpul?: number;
     };
     mesa: {
       absconder_received_tp: number;

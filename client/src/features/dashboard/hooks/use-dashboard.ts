@@ -43,8 +43,11 @@ export function useEnrollData(
           data: {
             cards: {
               migration: 0, tp_enroll: 0, live_enroll: 0, lt_enroll: 0,
+              total_db_size: 0,
               tp_hit: 0, tp_nohit: 0, live_hit: 0, live_nohit: 0,
-              lt_hit: 0, lt_nohit: 0,
+              tp_hit_tptp: 0, tp_no_hit_tptp: 0, tp_hit_tpul: 0, tp_no_hit_tpul: 0,
+              live_hit_tptp: 0, live_no_hit_tptp: 0, live_hit_tpul: 0, live_no_hit_tpul: 0,
+              lt_hit: 0, lt_nohit: 0, lt_no_hit: 0,
             },
             mesa: null,
             slip: null,
