@@ -76,13 +76,13 @@ export function MiddleMetricsRow() {
       <DualSubSectionCard
         leftSection={{
           title: "LT-TP",
-          hit: getCardValue("lt_hit"),
-          noHit: getCardValue("lt_no_hit", "lt_nohit"),
+          hit: getCardValue("lt_hit_lttp"),
+          noHit: getCardValue("lt_no_hit_lttp"),
         }}
         rightSection={{
           title: "LT-PALM",
-          hit: 0,
-          noHit: 0,
+          hit: getCardValue("lt_hit_ltpalm"),
+          noHit: getCardValue("lt_no_hit_ltpalm"),
         }}
         indicatorColor="violet"
         className="h-28"

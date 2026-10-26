@@ -48,6 +48,7 @@ export function useEnrollData(
               tp_hit_tptp: 0, tp_no_hit_tptp: 0, tp_hit_tpul: 0, tp_no_hit_tpul: 0,
               live_hit_tptp: 0, live_no_hit_tptp: 0, live_hit_tpul: 0, live_no_hit_tpul: 0,
               lt_hit: 0, lt_nohit: 0, lt_no_hit: 0,
+              lt_hit_lttp: 0, lt_no_hit_lttp: 0, lt_hit_ltpalm: 0, lt_no_hit_ltpalm: 0,
             },
             mesa: null,
             slip: null,

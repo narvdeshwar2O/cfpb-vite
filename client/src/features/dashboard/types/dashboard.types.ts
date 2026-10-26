@@ -18,9 +18,13 @@ export interface EnrollDataResponse {
       live_hit_tpul?: number;
       live_no_hit_tpul?: number;
       lt_enroll: number;
-      lt_hit: number;
+      lt_hit?: number;
       lt_nohit?: number;
       lt_no_hit?: number;
+      lt_hit_lttp?: number;
+      lt_no_hit_lttp?: number;
+      lt_hit_ltpalm?: number;
+      lt_no_hit_ltpalm?: number;
       migration: number;
       total_db_size?: number;
       tp_enroll: number;
