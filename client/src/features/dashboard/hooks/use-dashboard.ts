@@ -59,19 +59,6 @@ export function useEnrollData(
       }
       const result = await fetchEnrollData(cleanState, cleanDistrict, startDate, endDate);
 
-      const hasDateFilter = Boolean(startDate) || Boolean(endDate);
-      const isAllDistricts = district.length === 0 || district.includes("all");
-
-      if (
-        !hasDateFilter &&
-        isAllDistricts &&
-        effectiveState.includes("all") &&
-        result?.success &&
-        result.data?.cards?.lt_enroll !== undefined
-      ) {
-        result.data.cards.lt_enroll = Math.max(0, result.data.cards.lt_enroll - 26000);
-      }
-
       return result;
     },
   });

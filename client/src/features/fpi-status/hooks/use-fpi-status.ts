@@ -92,3 +92,14 @@ export function useChancePrintData() {
     queryFn: () => fetchFpiData('/fpi/chance-print', createPayload(filters, isScoped, scopedState))
   });
 }
+
+export function useSllCrimesData() {
+  const { filters } = useFilters();
+  const { isScoped, scopedState } = useStateScope();
+  const effectiveState = isScoped && scopedState ? [scopedState] : filters.state;
+
+  return useQuery({
+    queryKey: ["fpi-sll", effectiveState, filters.start_date, filters.end_date],
+    queryFn: () => fetchFpiData('/fpi/sll', createPayload(filters, isScoped, scopedState))
+  });
+}

@@ -142,3 +142,25 @@ export const FOREIGNERS_TP_COLS = createColumns("country", "Name of the country 
   { key: "tp_hit", label: "No. of TP HIT" },
   { key: "tp_no_hit", label: "No. of TP NOHIT" }
 ]);
+
+// 7. SLL Crimes
+export const SLL_CRIMES_COLS = createColumns("state", "State/UTs/CLEAs", [
+  { key: "total_tp", label: "Total TP" },
+  { key: "ndps_act", label: "NDPS Act" },
+  { key: "pocso_act", label: "POCSO Act" },
+  { key: "jj_act", label: "JJ Act" },
+  { key: "it_act", label: "IT Act" },
+  { key: "sc_st_act", label: "SC/ST Act" },
+  { key: "mcoca_other_org", label: "MCOCA / Other Organized Crime" },
+  { key: "arms_explosive", label: "Arms & Explosive Acts" },
+  { key: "uapa", label: "UAPA" },
+  { key: "bnss_crpc", label: "BNSS / CrPC" },
+  { key: "total_sll_classified", label: "Total SLL Classified" },
+]);
+
+export const SLL_CRIMES_HEADERS: HeaderGroup[] = [
+  { label: "Sl. No", colSpan: 1, rowSpan: 2 },
+  { label: "State/UTs/CLEAs", colSpan: 1, rowSpan: 2 },
+  { label: "Special & Local Laws (SLL) - Offence Wise Breakup", colSpan: 11 }
+];
+

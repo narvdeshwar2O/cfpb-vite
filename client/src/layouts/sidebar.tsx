@@ -109,14 +109,6 @@ export const Sidebar = React.memo(function Sidebar() {
         })()}
       </nav>
 
-      {/* Developed By Footer */}
-      <div className={cn("mt-auto pt-4 flex flex-col items-center justify-center shrink-0 border-t border-slate-200", isCollapsed ? "px-1" : "px-4")}>
-        <img
-          src="/opsvision.webp"
-          alt="Opsvision Logo"
-          className={cn("h-auto object-contain transition-all duration-300 rounded-md", isCollapsed ? "w-16" : "w-64")}
-        />
-      </div>
     </aside>
   );
 });
